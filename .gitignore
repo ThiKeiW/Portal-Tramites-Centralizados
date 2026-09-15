@@ -1,0 +1,19 @@
+# Documentos
+*.docx
+*.doc
+
+# Base de datos / entornos
+.env
+*.log
+
+# Dependencias
+node_modules/
+target/
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db
