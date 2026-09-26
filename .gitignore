@@ -9,6 +9,7 @@
 # Dependencias
 node_modules/
 target/
+dist/
 
 # IDE
 .vscode/
