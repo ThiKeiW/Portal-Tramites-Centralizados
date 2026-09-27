@@ -1,4 +1,4 @@
-import { TIPO_LABEL, TRAMITES, entidadPorSiglas } from '../data/placeholders';
+import { MODALIDAD_LABEL, TIPO_LABEL, TRAMITES, entidadPorSiglas, formatoCosto, requisitosDe } from '../data/placeholders';
 import { Casa, ChevronDer, Escudo, Externo, Globo, Info, Tarjeta } from '../components/iconos';
 
 export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
@@ -28,23 +28,23 @@ export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
           <h1>{tramite.nombre}</h1>
           <hr />
           <h2>Descripción</h2>
-          <p className="descripcion">{tramite.descripcionLarga}</p>
+          <p className="descripcion">{tramite.descripcion}</p>
           <hr />
           <div className="ficha-doble">
             <div className="ficha">
               <span className="icono-cuadro"><Tarjeta size={22} /></span>
-              <span><small>Costo</small><strong>{tramite.costo}</strong></span>
+              <span><small>Costo</small><strong>{formatoCosto(tramite.costo)}</strong></span>
             </div>
             <div className="ficha">
               <span className="icono-cuadro"><Globo size={22} /></span>
-              <span><small>Modalidad disponible</small><strong>{tramite.modalidad}</strong></span>
+              <span><small>Modalidad disponible</small><strong>{MODALIDAD_LABEL[tramite.modalidad]}</strong></span>
             </div>
           </div>
           <hr />
           <h2>Requisitos</h2>
           <ol className="lista-requisitos">
-            {tramite.requisitos.map((r, i) => (
-              <li key={i}><span className="numero" aria-hidden="true">{i + 1}</span><span>{r}</span></li>
+            {requisitosDe(tramite.id).map((r) => (
+              <li key={r.id}><span className="numero" aria-hidden="true">{r.orden}</span><span>{r.descripcion}</span></li>
             ))}
           </ol>
           <hr />
