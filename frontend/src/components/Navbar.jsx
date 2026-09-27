@@ -18,7 +18,7 @@ export default function Navbar({ activo, onNavegar }) {
           {LINKS.map((l) => (
             <button
               key={l.id}
-              className={activo === l.id ? 'activo' : ''}
+              className={activo === (l.id) && activo !== 'inicio' ? 'activo' : ''}
               aria-current={activo === l.id ? 'page' : undefined}
               onClick={() => onNavegar(l.id)}
             >

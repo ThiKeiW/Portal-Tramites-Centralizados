@@ -16,15 +16,15 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
     <>
       <section className="hero">
         <h1>¿Qué necesitas resolver hoy en el Estado Peruano?</h1>
-        <p>Accede a más de 5,000 trámites, servicios y documentos oficiales de todas las entidades públicas de manera fácil.</p>
+        <p>Accede a más de 5,000 trámites, servicios, reportes y guías oficiales de todas las entidades públicas de manera fácil.</p>
         <form className="barra-busqueda" role="search" onSubmit={buscar}>
           <Lupa size={22} />
           <input
             type="search"
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Busca tu trámite, servicio o documento..."
-            aria-label="Buscar trámite, servicio o documento"
+            placeholder="Busca tu trámite, servicio, reporte o guía..."
+            aria-label="Buscar trámite, servicio, reporte o guía"
           />
           <button type="button" className="btn-mic" onClick={onVoz} aria-label="Buscar por voz">
             <Mic size={20} />
