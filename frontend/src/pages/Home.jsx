@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BUSQUEDAS_POPULARES, CATEGORIAS, entidadPorSiglas } from '../data/placeholders';
-import { Doc, Engranaje, Grafico, Libro, Lupa, Mic } from './iconos';
+import { Doc, Engranaje, Grafico, Libro, Lupa, Mic } from '../components/iconos';
 
 const ICONOS_CATEGORIA = { doc: Doc, gear: Engranaje, chart: Grafico, book: Libro };
 

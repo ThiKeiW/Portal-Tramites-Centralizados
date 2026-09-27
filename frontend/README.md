@@ -28,10 +28,11 @@ persistencia en `localStorage`:
 
 ```
 src/
-├── a11y/AccessibilityContext.jsx  # preferencias + data-attrs en <html>
-├── data/placeholders.js           # entidades, categorías, trámites
-├── components/                    # Navbar, Home, Resultados, Detalle,
-│                                  # ModalVoz, PanelAccesibilidad, ...
-├── App.jsx                        # navegación por estado (sin router)
-└── styles.css                     # temas por [data-contraste]
+├── context/AccessibilityContext.jsx  # preferencias + data-attrs en <html>
+├── data/placeholders.js              # entidades, categorías, trámites
+├── pages/                            # Home, Resultados, Detalle
+├── components/                       # Navbar, ModalVoz, PanelAccesibilidad,
+│                                     # BotonFlotante, iconos
+├── App.jsx                           # navegación por estado (sin router)
+└── styles.css                        # temas por [data-contraste]
 ```

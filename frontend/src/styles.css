@@ -117,6 +117,19 @@ html[data-contraste='alto'] a { text-decoration: underline; }
 .btn-primario:hover { background: var(--primary-hover); }
 html[data-contraste='alto'] .btn-primario { border-width: 0.125rem; }
 
+/* Botón Volver al inicio: estilo propio en color acento, deliberadamente
+   distinto al primario. Se adapta a cada contraste vía --accent. */
+.btn-volver {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--surface); color: var(--accent);
+  border: 0.125rem solid var(--accent); border-radius: 999px;
+  font-weight: 700; font-size: 0.92rem; padding: 0.55rem 1.2rem;
+}
+.btn-volver:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-volver-compacto { font-size: 0.85rem; padding: 0.3rem 0.8rem; border-width: 0.1rem; }
+html[data-contraste='alto'] .btn-volver { border-width: 0.1875rem; }
+html[data-contraste='alto'] .btn-volver:hover { background: #000; border-color: #000; color: #fff; }
+
 /* ---------- Navbar ---------- */
 .navbar { background: var(--primary); color: var(--on-primary); }
 html[data-contraste='oscuro'] .navbar { background: #0a1428; border-bottom: 0.0625rem solid var(--border); }
@@ -321,6 +334,14 @@ html[data-contraste='alto'] .segmento { border-color: #000; }
 /* ---------- Detalle ---------- */
 .migas { display: flex; align-items: center; gap: 0.5rem; padding: 1.25rem 0; font-size: 0.9rem; color: var(--muted); flex-wrap: wrap; }
 .migas button { background: none; border: 0; color: var(--link); font-size: inherit; padding: 0; }
+/* El botón Volver conserva su estilo propio dentro de las migas */
+.migas .btn-volver {
+  background: var(--surface); color: var(--accent);
+  border: 0.1rem solid var(--accent); border-radius: 999px;
+  font-size: 0.85rem; padding: 0.3rem 0.8rem;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.migas .btn-volver:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 .migas strong { color: var(--ink); font-weight: 600; }
 .layout-detalle { display: grid; grid-template-columns: 1fr 22.5rem; gap: 1.5rem; align-items: start; padding-bottom: 4rem; }
 .detalle-cab-insignias { display: flex; gap: 0.5rem; margin-bottom: 0.875rem; flex-wrap: wrap; }

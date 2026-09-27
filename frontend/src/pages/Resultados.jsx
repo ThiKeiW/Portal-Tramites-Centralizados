@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CATEGORIAS, ENTIDADES, TIPO_LABEL, TRAMITES } from '../data/placeholders';
-import { Doc, Externo, Lupa, Mic, X } from './iconos';
+import { Casa, ChevronDer, Doc, Lupa, Mic, X } from '../components/iconos';
 
 function contarPorEntidad(lista) {
   const m = {};
@@ -150,7 +150,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
                 <p>{t.descripcion}</p>
               </div>
               <button className="btn-primario" onClick={() => onAbrirDetalle(t.id)}>
-                Ir al sitio oficial <Externo size={16} />
+                Ver detalles <ChevronDer size={16} />
               </button>
             </article>
           ))}
@@ -161,7 +161,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
               <h3>¿No encontraste lo que buscabas?</h3>
               <p>No se encontraron resultados para tu búsqueda. Intenta con otros términos o revisa los filtros.</p>
               <p style={{ marginTop: '1rem' }}>
-                <button className="btn-texto" onClick={onInicio}>Volver al inicio</button>
+                <button className="btn-volver" onClick={onInicio}><Casa size={18} /> Volver al inicio</button>
               </p>
             </div>
           )}

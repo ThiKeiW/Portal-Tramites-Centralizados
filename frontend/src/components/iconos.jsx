@@ -61,3 +61,6 @@ export const TextoAa = (p) => (
 export const CursorFlecha = (p) => (
   <Icono {...p} d={<path d="M5 3l14 7-6.6 1.6L9 18z" />} />
 );
+export const Casa = (p) => (
+  <Icono {...p} d={<><path d="M4 11l8-7 8 7" /><path d="M6 9.5V20h12V9.5" /></>} />
+);

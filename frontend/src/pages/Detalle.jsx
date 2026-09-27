@@ -1,5 +1,5 @@
 import { TIPO_LABEL, TRAMITES, entidadPorSiglas } from '../data/placeholders';
-import { ChevronDer, Escudo, Externo, Globo, Info, Tarjeta } from './iconos';
+import { Casa, ChevronDer, Escudo, Externo, Globo, Info, Tarjeta } from '../components/iconos';
 
 export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
   const tramite = TRAMITES.find((t) => t.id === id) ?? TRAMITES[0];
@@ -12,7 +12,7 @@ export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
   return (
     <div className="contenedor">
       <nav className="migas" aria-label="Migas de pan">
-        <button onClick={onInicio}>Inicio</button>
+        <button className="btn-volver btn-volver-compacto" onClick={onInicio}><Casa size={16} /> Inicio</button>
         <ChevronDer size={14} />
         <button onClick={onVolver}>Trámites</button>
         <ChevronDer size={14} />

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityProvider } from './a11y/AccessibilityContext';
+import { AccessibilityProvider } from './context/AccessibilityContext';
 import Navbar from './components/Navbar';
-import Home from './components/Home';
-import Resultados from './components/Resultados';
-import Detalle from './components/Detalle';
+import Home from './pages/Home';
+import Resultados from './pages/Resultados';
+import Detalle from './pages/Detalle';
 import ModalVoz from './components/ModalVoz';
 import PanelAccesibilidad from './components/PanelAccesibilidad';
 import BotonFlotante from './components/BotonFlotante';

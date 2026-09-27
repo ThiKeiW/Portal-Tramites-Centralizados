@@ -1,4 +1,4 @@
-import { CONTRASTES, CURSORES, TAMANOS_TEXTO, labelDe, useAccessibility } from '../a11y/AccessibilityContext';
+import { CONTRASTES, CURSORES, TAMANOS_TEXTO, labelDe, useAccessibility } from '../context/AccessibilityContext';
 import { Acceso, CursorFlecha, TextoAa, X } from './iconos';
 
 function Grupo({ titulo, icono, valor, opciones, segmentos, activoClase, onElegir }) {
