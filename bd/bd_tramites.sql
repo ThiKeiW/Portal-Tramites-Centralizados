@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS tramite (
     id_tipo             INT UNSIGNED     NOT NULL COMMENT 'Tipo de contenido (trámite, guía, etc.)',
     nombre              VARCHAR(200)     NOT NULL COMMENT 'Nombre del trámite / contenido',
     descripcion         TEXT             NULL COMMENT 'Descripción general',
-    url_oficial         VARCHAR(255)     NOT NULL COMMENT 'URL de la página oficial del trámite',
+    url_oficial         VARCHAR(512)     NOT NULL COMMENT 'URL de la página oficial del trámite',
     modalidad           ENUM('VIRTUAL','PRESENCIAL','SEMIPRESENCIAL') NOT NULL DEFAULT 'VIRTUAL',
     costo               DECIMAL(10, 2)   NOT NULL DEFAULT 0.00 COMMENT 'Costo en soles (TUPA)',
     activo              TINYINT(1)       NOT NULL DEFAULT 1,
@@ -173,8 +173,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Ficha de inscripción:Debes completar tus datos personales, de contacto, laborales y de formación en el aplicativo.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Documentos de experiencia:Debes presentar documentos que demuestren un año de experiencia como mínimo ejecutando trámites de registros civiles. La experiencia debe haberse desarrollado dentro de los últimos 10 años. Los documentos válidos incluyen contratos de trabajo, certificados, constancias, bol');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Ficha de inscripción:Debes completar tus datos personales, de contacto, laborales y de formación en el aplicativo.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Documentos de experiencia:Debes presentar documentos que demuestren un año de experiencia como mínimo ejecutando trámites de registros civiles. La experiencia debe haberse desarrollado dentro de los últimos 10 años. Los documentos válidos incluyen contratos de trabajo, certificados, constancias, bol');
 
 -- REVISAR (RENIEC / Acceder a la información sobre quién consultó tu DNI): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -186,6 +187,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (RENIEC / Acceder a las Convocatorias de Bienes y Servicios para Proce): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -197,7 +199,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Ver requisitos en la convocatoria vigente');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Ver requisitos en la convocatoria vigente');
 
 -- REVISAR (RENIEC / Acceder al Repositorio Institucional del Reniec): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -209,8 +212,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Dispositivo:Computadora de escritorio, laptop, tablet o teléfono celular.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Conexión a Internet:Para la navegación y descarga de archivos PDF.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Dispositivo:Computadora de escritorio, laptop, tablet o teléfono celular.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Conexión a Internet:Para la navegación y descarga de archivos PDF.');
 
 -- REVISAR (RENIEC / Actualizar PIN de seguridad): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -222,8 +226,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Contar con DNI electrónico');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Contar con lector de tarjetas digitales');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Contar con DNI electrónico');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Contar con lector de tarjetas digitales');
 
 -- REVISAR (RENIEC / Agendar citas presenciales en línea): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -235,9 +240,10 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   30.00
 );
+SET @tid = LAST_INSERT_ID();
 
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Correo electrónico activo: Recibirás un código de validación en tu bandeja de entrada.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Pago del trámite: Debes realizar el pago antes de agendar tu cita presencial.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Correo electrónico activo: Recibirás un código de validación en tu bandeja de entrada.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Pago del trámite: Debes realizar el pago antes de agendar tu cita presencial.');
 
 -- REVISAR (RENIEC / Autenticar o certificar una constancia o acta de nacimiento,): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -249,9 +255,10 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   31.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Formato de solicitud que te brindan en el centro de atención.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Copia certificada del acta registral o de la constancia por autenticar (No fotocopia).');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Exhibir tu DNI si eres peruano, o carnet de extranjería, pasaporte o cédula de identidad si eres extranjero.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Formato de solicitud que te brindan en el centro de atención.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Copia certificada del acta registral o de la constancia por autenticar (No fotocopia).');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Exhibir tu DNI si eres peruano, o carnet de extranjería, pasaporte o cédula de identidad si eres extranjero.');
 
 -- REVISAR (RENIEC / Cambiar el lugar de entrega del DNI): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -263,8 +270,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   5.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Formato de Solicitud suscrita con carácter de Declaración Jurada para hacer el cambio de lugar de recojo emitido enCentro de Atención del RENIEC');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Recibo de Pago por Derechos Administrativos.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Formato de Solicitud suscrita con carácter de Declaración Jurada para hacer el cambio de lugar de recojo emitido enCentro de Atención del RENIEC');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Recibo de Pago por Derechos Administrativos.');
 
 -- REVISAR (RENIEC / Canjear Libreta Electoral por DNI electrónico): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -276,13 +284,14 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Recibo original de servicios públicos, tributo municipal o Declaración Jurada de Domicilio en caso no contar con servicios públicos en tu domicilio.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Para registrar tu  estado civil, presenta la documentación del Anexo Nº 2 del TUPA según tu caso.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Para registrar tu grado de instrucción presenta los documentos especificados en elAnexo Nº 4 del TUPAsegún tu caso.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'En caso de tener alguna discapacidad, debes firmar la Declaración Jurada de Discapacidad y Asistencia. Además, deberás agregar:');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 5, 'Original y copia simple del Certificado de Discapacidad en el formato aprobado por el Minsa.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 6, 'Resolución Ejecutiva del Conadis.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 7, 'Constancia médica de discapacidad que señale la discapacidad física, sensorial, mental o  intelectual');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Recibo original de servicios públicos, tributo municipal o Declaración Jurada de Domicilio en caso no contar con servicios públicos en tu domicilio.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Para registrar tu  estado civil, presenta la documentación del Anexo Nº 2 del TUPA según tu caso.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Para registrar tu grado de instrucción presenta los documentos especificados en elAnexo Nº 4 del TUPAsegún tu caso.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'En caso de tener alguna discapacidad, debes firmar la Declaración Jurada de Discapacidad y Asistencia. Además, deberás agregar:');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 5, 'Original y copia simple del Certificado de Discapacidad en el formato aprobado por el Minsa.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 6, 'Resolución Ejecutiva del Conadis.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 7, 'Constancia médica de discapacidad que señale la discapacidad física, sensorial, mental o  intelectual');
 
 -- REVISAR (RENIEC / Consultar estado de tu trámite para la entrega de tu DNI): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -294,7 +303,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Conocer el número de DNI o número de solicitud.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Conocer el número de DNI o número de solicitud.');
 
 -- REVISAR (RENIEC / Consultar los horarios de centros de atención del RENIEC a n): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -306,6 +316,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (RENIEC / Consultar trámites rechazados en Consulados): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -317,7 +328,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Usuario y clave de acceso que solicitas mediante oficio a la Gerencia de Servicios de Valor Añadido de Reniec del Ministerio de Relaciones Exteriores.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Usuario y clave de acceso que solicitas mediante oficio a la Gerencia de Servicios de Valor Añadido de Reniec del Ministerio de Relaciones Exteriores.');
 
 -- REVISAR (RENIEC / Generar ticket para pagos de trámite a través de Yape y Agen): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -329,8 +341,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Conocer el trámite que vas a realizar y el código correspondiente.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Acceder a laTicketera RENIEC desde cualquier dispositivo con conexión a internet.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Conocer el trámite que vas a realizar y el código correspondiente.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Acceder a laTicketera RENIEC desde cualquier dispositivo con conexión a internet.');
 
 -- REVISAR (RENIEC / Inscribir Modificaciones en Actas Registrales): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -342,9 +355,10 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   12.30
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Solicitud suscrita con carácter de declaración jurada.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Parte notarial de otorgamiento de reconocimiento o protocolización del testamento.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Exhibir tu DNI.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Solicitud suscrita con carácter de declaración jurada.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Parte notarial de otorgamiento de reconocimiento o protocolización del testamento.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Exhibir tu DNI.');
 
 -- REVISAR (SUNAT / Acceder a la Calculadora Tributaria): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -356,6 +370,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (SUNAT / Acceder a la atención de consultas en Redes Sociales): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -367,8 +382,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Contar con cuenta de Facebook');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Servicio activo de lunes a viernes en el horario de las 8:30 a. m. a 5:30 p. m');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Contar con cuenta de Facebook');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Servicio activo de lunes a viernes en el horario de las 8:30 a. m. a 5:30 p. m');
 
 -- REVISAR (SUNAT / Acceder a la información pública de la Sunat): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -380,7 +396,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Solicitud de acceso a la información pública.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Solicitud de acceso a la información pública.');
 
 -- REVISAR (SUNAT / Acceder a tu expediente electrónico de cobranza coactiva en ): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -392,7 +409,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Clave SOL.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Clave SOL.');
 
 -- REVISAR (SUNAT / Acceder al Buzón SOL): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -404,7 +422,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'RUC y Clave SOL.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'RUC y Clave SOL.');
 
 -- REVISAR (SUNAT / Acceder al Chat Sunat): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -416,7 +435,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Horario de atención de lunes a viernes de 8:30 a.m. a 6:00 p.m.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Horario de atención de lunes a viernes de 8:30 a.m. a 6:00 p.m.');
 
 -- REVISAR (SUNAT / Acceder al Nuevo RUS): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -428,11 +448,12 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Ser persona natural o sucesión indivisa.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'DNI vigente, Carnet de Extranjería, Carnet de Identidad, Carnet de Permiso Temporal de Permanencia o Pasaporte con calidad migratoria para la generación de renta de fuente peruana.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Si cuentas con representante legal, debes exhibir el DNI de éste.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Si vas a registrar una dirección distinta a la de tu DNI, debes presentar el original de tu DNI y cualquier documento privado o público en el que conste la dirección del domicilio fiscal.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 5, 'Carta poder con firma legalizada notarialmente o autenticada por fedatario de SUNAT, que lo autorice expresamente a realizar el trámite de inscripción en el RUC.  (Si el trámite lo hace un tercero)');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Ser persona natural o sucesión indivisa.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'DNI vigente, Carnet de Extranjería, Carnet de Identidad, Carnet de Permiso Temporal de Permanencia o Pasaporte con calidad migratoria para la generación de renta de fuente peruana.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Si cuentas con representante legal, debes exhibir el DNI de éste.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Si vas a registrar una dirección distinta a la de tu DNI, debes presentar el original de tu DNI y cualquier documento privado o público en el que conste la dirección del domicilio fiscal.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 5, 'Carta poder con firma legalizada notarialmente o autenticada por fedatario de SUNAT, que lo autorice expresamente a realizar el trámite de inscripción en el RUC.  (Si el trámite lo hace un tercero)');
 
 -- REVISAR (SUNAT / Acceder al Programa de Envío de Información (PEI)): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -444,8 +465,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'RUC.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Tener la información de los comprobantes a enviar (contingencia, percepción y retención u otros).');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'RUC.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Tener la información de los comprobantes a enviar (contingencia, percepción y retención u otros).');
 
 -- REVISAR (SUNAT / Acceder al Régimen General): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -454,15 +476,16 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'Declarar y pagar impuestos en el Régimen General',
   'Es el procedimiento por el que registras los ingresos obtenidos por tu actividad empresarial dentro del régimen Régimen General como establecen las obligaciones tributarias.',
   'https://www.gob.pe/1173-declaracion-y-pago-del-impuesto-para-negocios-declaracion-y-pago-en-el-regimen-general',
-  'PRESENCIAL O VIRTUAL',
+  'SEMIPRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Ventas e ingresos del mes (periodo a declarar).');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Compras por adquisición de bienes y prestación de servicios del mes (periodo a declarar).');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Saldo a favor del periodo anterior, de corresponder.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Monto de retenciones y percepciones del IGV que te efectuaron en el periodo y/o saldo de periodos anteriores .');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 5, 'Coeficiente para el pago a cuenta mensual de renta, de corresponder.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 6, 'Pagos previos, de corresponder (efectuados con boletas de pago).');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Ventas e ingresos del mes (periodo a declarar).');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Compras por adquisición de bienes y prestación de servicios del mes (periodo a declarar).');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Saldo a favor del periodo anterior, de corresponder.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Monto de retenciones y percepciones del IGV que te efectuaron en el periodo y/o saldo de periodos anteriores .');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 5, 'Coeficiente para el pago a cuenta mensual de renta, de corresponder.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 6, 'Pagos previos, de corresponder (efectuados con boletas de pago).');
 
 -- REVISAR (SUNAT / Acceder al Sistema de Despacho Aduanero (SDA)): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -476,7 +499,8 @@ Despacho aduanero de ingreso.',
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'RUC y clave SOL.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'RUC y clave SOL.');
 
 -- REVISAR (SUNAT / Acceder al Teledespacho): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -488,7 +512,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Usuario y contraseña .');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Usuario y contraseña .');
 
 -- REVISAR (SUNAT / Activar RUC de persona jurídica): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -500,8 +525,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Clave SOL. Si no la tienes, trámitala a través de Sunat Virtual del App Personas.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Información de la empresa como nombre comercial, fecha de inicio de actividades, actividad principal y secundaria, dirección de domicilio fiscal, datos de contacto, entre otros.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Clave SOL. Si no la tienes, trámitala a través de Sunat Virtual del App Personas.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Información de la empresa como nombre comercial, fecha de inicio de actividades, actividad principal y secundaria, dirección de domicilio fiscal, datos de contacto, entre otros.');
 
 -- REVISAR (ESSALUD / Acceder a la Plataforma VIVA): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -513,8 +539,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Contar con acreditación vigente del Seguro EsSalud.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Documento de identidad (DNI), Pasaporte, Carnet de Extranjería (CE) o  Permiso Temporal de permanencia (PTP).');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Contar con acreditación vigente del Seguro EsSalud.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Documento de identidad (DNI), Pasaporte, Carnet de Extranjería (CE) o  Permiso Temporal de permanencia (PTP).');
 
 -- REVISAR (ESSALUD / Acreditación de tu seguro en EsSalud): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -526,12 +553,13 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'DNI, certificado de extranjería, permiso temporal de permanencia');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Si eres trabajador regular (dependiente), presenta tu última boleta o penúltima boleta de remuneración.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Si eres trabajadora del hogar, presenta tus tres últimos recibos de pago del seguro.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Si erespensionista,presenta tu resolución de pensionista');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 5, 'Si eres beneficiario de la Ley 30425, presenta tu constancia de retiro');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 6, 'Si eres afiliado al seguro independiente, presenta tu recibo del último pago realizado');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'DNI, certificado de extranjería, permiso temporal de permanencia');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Si eres trabajador regular (dependiente), presenta tu última boleta o penúltima boleta de remuneración.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Si eres trabajadora del hogar, presenta tus tres últimos recibos de pago del seguro.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Si erespensionista,presenta tu resolución de pensionista');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 5, 'Si eres beneficiario de la Ley 30425, presenta tu constancia de retiro');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 6, 'Si eres afiliado al seguro independiente, presenta tu recibo del último pago realizado');
 
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
   (SELECT id_entidad FROM entidad WHERE siglas = 'ESSALUD'),
@@ -542,6 +570,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (ESSALUD / Consultar dónde atenderte en EsSalud): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -553,6 +582,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (ESSALUD / Ingresa al  Repositorio Institucional del Seguro Social de S): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -564,6 +594,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (ESSALUD / Ingresa al catálogo en línea de EsSalud): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -575,6 +606,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (ESSALUD / Inscribirse en Padomi): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -586,13 +618,14 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'DNI original del paciente.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'DNI original del familiar responsable.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Si tienes alguna discapacidad, presenta tuCarnet de Conadis en físico (amarillo).');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Referencia de tu centro asistencial.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 5, 'Asistir a charla de inducción brindada por Padomi.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 6, 'Si no eres familiar directo del paciente, debes presentar una carta poder simple.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 7, 'Croquis de cómo llegar a tu domicilio');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'DNI original del paciente.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'DNI original del familiar responsable.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Si tienes alguna discapacidad, presenta tuCarnet de Conadis en físico (amarillo).');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Referencia de tu centro asistencial.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 5, 'Asistir a charla de inducción brindada por Padomi.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 6, 'Si no eres familiar directo del paciente, debes presentar una carta poder simple.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 7, 'Croquis de cómo llegar a tu domicilio');
 
 -- REVISAR (ESSALUD / Presentar Declaración Jurada de Conflicto de Intereses para ): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -604,7 +637,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'DNI o Carnet de Extranjería.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'DNI o Carnet de Extranjería.');
 
 -- REVISAR (ESSALUD / Procedimiento de Selección.): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -616,8 +650,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'DNI o Carnet de Extranjería.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Resolución de designación');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'DNI o Carnet de Extranjería.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Resolución de designación');
 
 -- REVISAR (ESSALUD / Sacar una cita médica en EsSalud): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -629,8 +664,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Documento de identidad, carnet de extranjería o pasaporte.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Para ser atendido en EsSalud tu seguro debe de estar activo, para verificarlo puedes hacerlo a través de:');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Documento de identidad, carnet de extranjería o pasaporte.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Para ser atendido en EsSalud tu seguro debe de estar activo, para verificarlo puedes hacerlo a través de:');
 
 -- REVISAR (ESSALUD / Acceder a mesa de partes): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -642,10 +678,11 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'PRESENCIAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Solicitud simple que exprese claramente tu pedido.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Número de DNI, RUC, pasaporte o carnet de extranjería.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Correo electrónico y número de teléfono.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Documentos (oficio, carta, solicitud u otro) que sustente el trámite que deseas realizar.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Solicitud simple que exprese claramente tu pedido.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Número de DNI, RUC, pasaporte o carnet de extranjería.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Correo electrónico y número de teléfono.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Documentos (oficio, carta, solicitud u otro) que sustente el trámite que deseas realizar.');
 
 -- REVISAR (ESSALUD / Atención de denuncias por presuntos actos de corrupción en E): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -657,10 +694,11 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Marcar como entidad donde se origina la denuncia: Seguro Social de Salud');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Correo electrónico y número telefónico.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'En caso de presentar la denuncia como persona jurídica, número de RUC.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Documentación original o copia simple que sustente tu denuncia. También puedes precisar la unidad o dependencia donde se efectuó el hecho.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Marcar como entidad donde se origina la denuncia: Seguro Social de Salud');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Correo electrónico y número telefónico.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'En caso de presentar la denuncia como persona jurídica, número de RUC.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Documentación original o copia simple que sustente tu denuncia. También puedes precisar la unidad o dependencia donde se efectuó el hecho.');
 
 -- REVISAR (ESSALUD / Presentar un reclamo ante una entidad pública): no se encontro un boton de accion (CTA) externo claro, se dejo la propia pagina de gob.pe como url_oficial; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -672,9 +710,10 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'DNI, Certificado de extranjería, pasaporte o RUC');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Correo electrónico.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Número celular');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'DNI, Certificado de extranjería, pasaporte o RUC');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Correo electrónico.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Número celular');
 
 -- REVISAR (SUNARP / Acceder a consulta registral para municipalidades y gobierno): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -686,7 +725,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Contar con usuario y contraseña en el SPRL.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Contar con usuario y contraseña en el SPRL.');
 
 -- REVISAR (SUNARP / Acceder a la Plataforma de Servicios Institucionales): costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -698,7 +738,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Contar con usuario y contraseña del sistema.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Contar con usuario y contraseña del sistema.');
 
 -- REVISAR (SUNARP / Acceder a las convocatorias de 8 UIT de la Sunarp): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -710,13 +751,14 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'RUC');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Razón social');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Registro Nacional de Proveedores (RNP)');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Email');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 5, 'Teléfono');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 6, 'Persona de contacto');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 7, 'Grupo de convocatoria al que postula.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'RUC');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Razón social');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Registro Nacional de Proveedores (RNP)');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Email');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 5, 'Teléfono');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 6, 'Persona de contacto');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 7, 'Grupo de convocatoria al que postula.');
 
 -- REVISAR (SUNARP / Acceder al Visor de la Base Gráfica Registral): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -728,8 +770,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Número de DNI.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Fecha de emisión de DNI.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Número de DNI.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Fecha de emisión de DNI.');
 
 -- REVISAR (SUNARP / Acceder al formato de inmatriculación vehicular): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -741,8 +784,9 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Datos personales del titular del vehículo');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Detalles de las características del vehículo');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Datos personales del titular del vehículo');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Detalles de las características del vehículo');
 
 -- REVISAR (SUNARP / Alertar el robo de un vehículo): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -754,10 +798,11 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Número de Documento Nacional de Identidad (DNI).');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Número del teléfono celular del usuario.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Número de placa.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Número de TIVE.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Número de Documento Nacional de Identidad (DNI).');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Número del teléfono celular del usuario.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Número de placa.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Número de TIVE.');
 
 -- REVISAR (SUNARP / Buscar y reservar el nombre de una empresa en la Sunarp): modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -769,7 +814,8 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   25.60
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Usuario y contraseña para acceder al SID - SUNARP.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Usuario y contraseña para acceder al SID - SUNARP.');
 
 
 
@@ -783,6 +829,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- REVISAR (SUNARP / Cambiar la tarjeta de identificación vehicular (TIV) a la ve): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -794,10 +841,11 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 1, 'Número de DNI.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 2, 'Fecha de emisión del DNI.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 3, 'Correo electrónico.');
-INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (LAST_INSERT_ID(), 4, 'Última tarjeta de identificación vehicular (TIV) física expedida por la Sunarp.');
+SET @tid = LAST_INSERT_ID();
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 1, 'Número de DNI.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 2, 'Fecha de emisión del DNI.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 3, 'Correo electrónico.');
+INSERT INTO requisito (id_tramite, orden, descripcion) VALUES (@tid, 4, 'Última tarjeta de identificación vehicular (TIV) física expedida por la Sunarp.');
 
 -- REVISAR (SUNARP / Conocer el directorio nacional de personas jurídicas): tipo asumido SERVICIO por defecto, ningun patron de nombre matcheo -- clasifica a mano; modalidad asumida VIRTUAL, no se encontro en el texto; costo asumido 0.00, no se encontro monto -- verificar TUPA
 INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, modalidad, costo) VALUES (
@@ -809,6 +857,7 @@ INSERT INTO tramite (id_entidad, id_tipo, nombre, descripcion, url_oficial, moda
   'VIRTUAL',
   0.00
 );
+SET @tid = LAST_INSERT_ID();
 
 -- vinculos tramite <-> etiqueta (por nombre+entidad, no por ID fijo)
 INSERT IGNORE INTO tramite_etiqueta (id_tramite, id_etiqueta) VALUES (
