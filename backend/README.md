@@ -7,14 +7,21 @@ API REST en **Spring Boot 3.5** que expone el catálogo de trámites de
 
 ```bash
 cd backend
+# 1. Crea tu archivo local de credenciales (copiado de la plantilla .env)
+copy .env .env.local
+# 2. Edita .env.local con tu usuario/contraseña de MySQL
+
+# 3. Levanta la app
 mvn spring-boot:run
 ```
 
 Requisitos: JDK 17+, MySQL 8 con `portal_tramites_db` cargada.
 
-La contraseña de MySQL **no se commitea**: defínela como variable de entorno
-(Windows: `set DB_PASSWORD=tu_clave`, PowerShell: `$env:DB_PASSWORD="tu_clave"`).
-Opcionalmente `DB_USER` (por defecto `root`).
+### Variables de entorno
+
+- **`.env`** (versionado): plantilla con los nombres de las variables (`DB_USER`, `DB_PASSWORD`).
+- **`.env.local`** (ignorado por `.gitignore`): tus credenciales reales. El backend lo carga automáticamente al iniciar; nunca se sube al repositorio.
+- Alternativa: definir `DB_USER` / `DB_PASSWORD` como variables de entorno del sistema.
 
 ## Dependencias
 
