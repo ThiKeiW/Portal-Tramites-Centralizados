@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BUSQUEDAS_POPULARES, CATEGORIAS, entidadPorSiglas } from '../data/placeholders';
+import { CATEGORIAS, entidadPorSiglas } from '../data/placeholders';
 import { Doc, Engranaje, Grafico, Libro, Lupa, Mic } from '../components/iconos';
 
 const ICONOS_CATEGORIA = { doc: Doc, gear: Engranaje, chart: Grafico, book: Libro };
@@ -31,12 +31,6 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
           </button>
           <button type="submit" className="btn-primario">Buscar</button>
         </form>
-        <div className="busquedas-populares">
-          <span>Búsquedas populares:</span>
-          {BUSQUEDAS_POPULARES.map((b) => (
-            <button key={b} className="chip" onClick={() => onBuscar(b)}>{b}</button>
-          ))}
-        </div>
       </section>
 
       <div className="contenedor">
@@ -59,7 +53,7 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
         <section className="seccion" aria-labelledby="tit-entidades" style={{ paddingBottom: '4rem' }}>
           <h2 id="tit-entidades">Trámites rápidos de entidades destacadas</h2>
           <div className="grid-4">
-            {['SUNAT', 'MINEDU', 'SUNARP', 'ESSALUD'].map((siglas) => {
+            {['SUNAT', 'RENIEC', 'SUNARP', 'ESSALUD'].map((siglas) => {
               const e = entidadPorSiglas(siglas);
               return (
                 <button key={siglas} className="tarjeta clicable" onClick={() => onEntidad(siglas)}>
