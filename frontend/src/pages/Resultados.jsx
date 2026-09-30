@@ -91,7 +91,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
 
           <div className="grupo-filtro">
             <h3>Entidad emisora</h3>
-            {ENTIDADES.map((e) => (
+            {ENTIDADES.filter((e) => (conteos[e.siglas] ?? 0) > 0).map((e) => (
               <label key={e.siglas} className="opcion">
                 <input
                   type="checkbox"

@@ -1,9 +1,10 @@
-import { MODALIDAD_LABEL, TIPO_LABEL, TRAMITES, entidadPorSiglas, formatoCosto, requisitosDe } from '../data/placeholders';
+import { CATEGORIAS, MODALIDAD_LABEL, TIPO_LABEL, TRAMITES, entidadPorSiglas, formatoCosto, requisitosDe } from '../data/placeholders';
 import { Casa, ChevronDer, Escudo, Externo, Globo, Info, Tarjeta } from '../components/iconos';
 
 export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
   const tramite = TRAMITES.find((t) => t.id === id) ?? TRAMITES[0];
   const entidad = entidadPorSiglas(tramite.entidad);
+  const categoria = CATEGORIAS.find((c) => c.id === tramite.tipo)?.nombre ?? 'Trámites';
   const relacionados = TRAMITES.filter((t) => t.id !== tramite.id && t.entidad === tramite.entidad).slice(0, 3);
   const relleno = relacionados.length < 3
     ? [...relacionados, ...TRAMITES.filter((t) => t.id !== tramite.id && t.entidad !== tramite.entidad)].slice(0, 3)
@@ -14,7 +15,7 @@ export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
       <nav className="migas" aria-label="Migas de pan">
         <button className="btn-volver btn-volver-compacto" onClick={onInicio}><Casa size={16} /> Inicio</button>
         <ChevronDer size={14} />
-        <button onClick={onVolver}>Trámites</button>
+        <button onClick={() => onVolver(tramite.tipo)}>{categoria}</button>
         <ChevronDer size={14} />
         <strong aria-current="page">{tramite.nombre}</strong>
       </nav>

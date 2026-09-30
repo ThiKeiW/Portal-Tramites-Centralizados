@@ -58,7 +58,7 @@ export default function App() {
       {vista.nombre === 'detalle' && (
         <Detalle
           id={vista.id}
-          onVolver={() => irResultados('')}
+          onVolver={(tipo) => irResultados('', tipo ?? null, null)}
           onAbrirDetalle={irDetalle}
           onInicio={irInicio}
         />
