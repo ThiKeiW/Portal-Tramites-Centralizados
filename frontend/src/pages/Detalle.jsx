@@ -1,5 +1,5 @@
 import { CATEGORIAS, MODALIDAD_LABEL, TIPO_LABEL, TRAMITES, entidadPorSiglas, formatoCosto, requisitosDe } from '../data/placeholders';
-import { Casa, ChevronDer, Escudo, Externo, Globo, Info, Tarjeta } from '../components/iconos';
+import { Casa, ChevronDer, Escudo, Externo, Globo, Tarjeta } from '../components/iconos';
 
 export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
   const tramite = TRAMITES.find((t) => t.id === id) ?? TRAMITES[0];
@@ -63,11 +63,6 @@ export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
                 <span>{entidadPorSiglas(r.entidad)?.nombre ?? r.entidad} - {r.entidad}</span>
               </button>
             ))}
-          </section>
-          <section className="tarjeta tarjeta-ayuda" aria-labelledby="tit-ayuda">
-            <h3 id="tit-ayuda"><Info size={20} /> ¿Necesitas ayuda?</h3>
-            <p>Si tienes dudas sobre este trámite, comunícate con la central telefónica de atención al ciudadano de {tramite.entidad}.</p>
-            <p><strong className="linea">Línea gratuita: 1818</strong></p>
           </section>
         </aside>
       </div>

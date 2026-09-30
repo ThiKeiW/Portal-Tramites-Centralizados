@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BUSQUEDAS_POPULARES, CATEGORIAS, entidadPorSiglas } from '../data/placeholders';
+import { CATEGORIAS, entidadPorSiglas } from '../data/placeholders';
 import { Doc, Engranaje, Grafico, Libro, Lupa, Mic } from '../components/iconos';
 
 const ICONOS_CATEGORIA = { doc: Doc, gear: Engranaje, chart: Grafico, book: Libro };
@@ -31,12 +31,6 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
           </button>
           <button type="submit" className="btn-primario">Buscar</button>
         </form>
-        <div className="busquedas-populares">
-          <span>Búsquedas populares:</span>
-          {BUSQUEDAS_POPULARES.map((b) => (
-            <button key={b} className="chip" onClick={() => onBuscar(b)}>{b}</button>
-          ))}
-        </div>
       </section>
 
       <div className="contenedor">
