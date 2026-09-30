@@ -21,7 +21,7 @@ Panel flotante (botón inferior derecho) con aplicación instantánea y
 persistencia en `localStorage`:
 
 - **Tamaño de texto:** Normal / Grande / Extra grande
-- **Contrastes:** Normal / Alto / Oscuro
+- **Contrastes:** Normal / Alto / Oscuro / Grises (escala de grises)
 - **Cursor:** Estándar / Grande (flecha de 40px de alto contraste)
 
 ## Estructura

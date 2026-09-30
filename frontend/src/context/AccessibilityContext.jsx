@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-// Opciones exigidas: 3 contrastes, 3 tamaños de texto, 2 tamaños de cursor.
+// Opciones: 4 contrastes, 3 tamaños de texto, 2 tamaños de cursor.
 export const CONTRASTES = [
   { id: 'normal', label: 'Normal' },
   { id: 'alto', label: 'Alto' },
   { id: 'oscuro', label: 'Oscuro' },
+  { id: 'gris', label: 'Grises' },
 ];
 
 export const TAMANOS_TEXTO = [

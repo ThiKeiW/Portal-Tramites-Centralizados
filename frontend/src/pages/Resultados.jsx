@@ -13,7 +13,6 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
   const [texto, setTexto] = useState(queryInicial ?? '');
   const [tipos, setTipos] = useState(() => (tipoInicial ? new Set([tipoInicial]) : new Set()));
   const [entidades, setEntidades] = useState(() => (entidadInicial ? new Set([entidadInicial]) : new Set()));
-  const [orden, setOrden] = useState('solicitado');
 
   const alternar = (set, setSet, valor) => {
     setSet((prev) => {
@@ -36,9 +35,9 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
       const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad);
       return coincideTexto && coincideTipo && coincideEntidad;
     });
-    if (orden === 'az') lista = [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    lista = [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
     return lista;
-  }, [query, tipos, entidades, orden]);
+  }, [query, tipos, entidades]);
 
   const conteos = useMemo(() => contarPorEntidad(TRAMITES), []);
   const conteosTipo = useMemo(() => {
@@ -87,7 +86,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
         <aside className="filtros" aria-label="Filtros">
           <div className="filtros-cab">
             <h2>Filtrar resultados</h2>
-            <button className="btn-texto" onClick={limpiarFiltros}>Limpiar todo</button>
+            <button className="btn-limpiar-todo" onClick={limpiarFiltros}>Limpiar todo</button>
           </div>
 
           <div className="grupo-filtro">
@@ -126,14 +125,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
         <section aria-live="polite">
           <div className="resultados-cab">
             <p>Se encontraron <strong>{resultados.length} resultado{resultados.length === 1 ? '' : 's'}</strong>
-              {query && <> para “{query}”</>}</p>
-            <label className="ordenar">
-              Ordenar por:
-              <select value={orden} onChange={(e) => setOrden(e.target.value)}>
-                <option value="solicitado">Más solicitado</option>
-                <option value="az">Nombre (A–Z)</option>
-              </select>
-            </label>
+              {query && <> para “{query}”</>} <span className="orden-fijo">(ordenados A–Z)</span></p>
           </div>
 
           {resultados.map((t) => (

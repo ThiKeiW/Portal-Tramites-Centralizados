@@ -2,8 +2,9 @@
 *.docx
 *.doc
 
-# Base de datos / entornos
-.env
+# Entornos: .env es plantilla versionada; las credenciales van en .env.local (ignorado)
+.env.local
+.env.*.local
 *.log
 
 # Dependencias
