@@ -1,18 +1,38 @@
-import { useMemo, useState } from 'react';
-import { CATEGORIAS, ENTIDADES, TIPO_LABEL, TRAMITES } from '../data/placeholders';
+import { useEffect, useMemo, useState } from 'react';
+import { api } from '../api/portalApi';
+import { TIPO_LABEL, categoriaDe, tipoId } from '../data/catalogo';
 import { Casa, ChevronDer, Doc, Lupa, Mic, X } from '../components/iconos';
-
-function contarPorEntidad(lista) {
-  const m = {};
-  lista.forEach((t) => { m[t.entidad] = (m[t.entidad] ?? 0) + 1; });
-  return m;
-}
 
 export default function Resultados({ queryInicial, tipoInicial, entidadInicial, onAbrirDetalle, onVoz, onInicio }) {
   const [query, setQuery] = useState(queryInicial ?? '');
   const [texto, setTexto] = useState(queryInicial ?? '');
   const [tipos, setTipos] = useState(() => (tipoInicial ? new Set([tipoInicial]) : new Set()));
   const [entidades, setEntidades] = useState(() => (entidadInicial ? new Set([entidadInicial]) : new Set()));
+  const [base, setBase] = useState([]);
+  const [catalogoEntidades, setCatalogoEntidades] = useState([]);
+  const [catalogoTipos, setCatalogoTipos] = useState([]);
+  const [estado, setEstado] = useState('cargando');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let vivo = true;
+    setEstado('cargando');
+    setError('');
+    Promise.all([api.buscarTramites(query), api.entidades(), api.tipos()])
+      .then(([tramites, ents, tips]) => {
+        if (!vivo) return;
+        setBase(tramites);
+        setCatalogoEntidades(ents);
+        setCatalogoTipos(tips);
+        setEstado('listo');
+      })
+      .catch((e) => {
+        if (!vivo) return;
+        setError(e.message);
+        setEstado('error');
+      });
+    return () => { vivo = false; };
+  }, [query]);
 
   const alternar = (set, setSet, valor) => {
     setSet((prev) => {
@@ -24,27 +44,31 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
   };
 
   const resultados = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let lista = TRAMITES.filter((t) => {
-      const coincideTexto =
-        !q ||
-        t.nombre.toLowerCase().includes(q) ||
-        t.descripcion.toLowerCase().includes(q) ||
-        t.entidad.toLowerCase().includes(q);
-      const coincideTipo = tipos.size === 0 || tipos.has(t.tipo);
-      const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad);
-      return coincideTexto && coincideTipo && coincideEntidad;
+    const lista = base.filter((t) => {
+      const coincideTipo = tipos.size === 0 || tipos.has(tipoId(t.tipo?.nombre));
+      const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad?.siglas);
+      return coincideTipo && coincideEntidad;
     });
-    lista = [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-    return lista;
-  }, [query, tipos, entidades]);
+    return [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  }, [base, tipos, entidades]);
 
-  const conteos = useMemo(() => contarPorEntidad(TRAMITES), []);
+  const conteos = useMemo(() => {
+    const m = {};
+    base.forEach((t) => {
+      const s = t.entidad?.siglas;
+      if (s) m[s] = (m[s] ?? 0) + 1;
+    });
+    return m;
+  }, [base]);
+
   const conteosTipo = useMemo(() => {
     const m = {};
-    TRAMITES.forEach((t) => { m[t.tipo] = (m[t.tipo] ?? 0) + 1; });
+    base.forEach((t) => {
+      const id = tipoId(t.tipo?.nombre);
+      m[id] = (m[id] ?? 0) + 1;
+    });
     return m;
-  }, []);
+  }, [base]);
 
   const limpiarFiltros = () => {
     setTipos(new Set());
@@ -55,6 +79,8 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
     e.preventDefault();
     setQuery(texto.trim());
   };
+
+  const entidadesVisibles = catalogoEntidades.filter((e) => (conteos[e.siglas] ?? 0) > 0);
 
   return (
     <>
@@ -91,7 +117,8 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
 
           <div className="grupo-filtro">
             <h3>Entidad emisora</h3>
-            {ENTIDADES.filter((e) => (conteos[e.siglas] ?? 0) > 0).map((e) => (
+            {estado === 'cargando' && <p className="conteo">Cargando…</p>}
+            {entidadesVisibles.map((e) => (
               <label key={e.siglas} className="opcion">
                 <input
                   type="checkbox"
@@ -108,17 +135,20 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
 
           <div className="grupo-filtro">
             <h3>Tipo de recurso</h3>
-            {CATEGORIAS.map((c) => (
-              <label key={c.id} className="opcion">
-                <input
-                  type="checkbox"
-                  checked={tipos.has(c.id)}
-                  onChange={() => alternar(tipos, setTipos, c.id)}
-                />
-                {c.nombre}
-                <span className="conteo">({conteosTipo[c.id] ?? 0})</span>
-              </label>
-            ))}
+            {catalogoTipos.map((t) => {
+              const meta = categoriaDe(t.nombre);
+              return (
+                <label key={t.id} className="opcion">
+                  <input
+                    type="checkbox"
+                    checked={tipos.has(meta.id)}
+                    onChange={() => alternar(tipos, setTipos, meta.id)}
+                  />
+                  {meta.nombre}
+                  <span className="conteo">({conteosTipo[meta.id] ?? 0})</span>
+                </label>
+              );
+            })}
           </div>
         </aside>
 
@@ -128,26 +158,43 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
               {query && <> para “{query}”</>} <span className="orden-fijo">(ordenados A–Z)</span></p>
           </div>
 
-          {resultados.map((t) => (
-            <article key={t.id} className="tarjeta resultado">
-              <span className="resultado-icono"><Doc size={24} /></span>
-              <div className="resultado-cuerpo">
-                <h3>
-                  <button className="btn-texto" style={{ fontSize: 'inherit', textAlign: 'left' }} onClick={() => onAbrirDetalle(t.id)}>
-                    {t.nombre}
-                  </button>
-                  <span className={`insignia insignia-tipo ${t.tipo === 'servicio' ? 'servicio' : ''}`}>{TIPO_LABEL[t.tipo]}</span>
-                  <span className="insignia insignia-ent">{t.entidad}</span>
-                </h3>
-                <p>{t.descripcion}</p>
-              </div>
-              <button className="btn-primario" onClick={() => onAbrirDetalle(t.id)}>
-                Ver detalles <ChevronDer size={16} />
-              </button>
-            </article>
-          ))}
+          {estado === 'cargando' && (
+            <div className="cargando" role="status"><span className="rueda" aria-hidden="true" /><span>Buscando trámites…</span></div>
+          )}
 
-          {resultados.length === 0 && (
+          {estado === 'error' && (
+            <div className="tarjeta estado-vacio" role="alert">
+              <h3>No se pudo cargar la búsqueda</h3>
+              <p>{error}</p>
+              <p style={{ marginTop: '1rem' }}>
+                <button className="btn-primario" onClick={() => setQuery((q) => q)}>Reintentar</button>
+              </p>
+            </div>
+          )}
+
+          {estado === 'listo' && resultados.map((t) => {
+            const idTipo = tipoId(t.tipo?.nombre);
+            return (
+              <article key={t.id} className="tarjeta resultado">
+                <span className="resultado-icono"><Doc size={24} /></span>
+                <div className="resultado-cuerpo">
+                  <h3>
+                    <button className="btn-texto" style={{ fontSize: 'inherit', textAlign: 'left' }} onClick={() => onAbrirDetalle(t.id)}>
+                      {t.nombre}
+                    </button>
+                    <span className={`insignia insignia-tipo ${idTipo === 'servicio' ? 'servicio' : ''}`}>{TIPO_LABEL[idTipo]}</span>
+                    <span className="insignia insignia-ent">{t.entidad?.siglas}</span>
+                  </h3>
+                  <p>{t.descripcion}</p>
+                </div>
+                <button className="btn-primario" onClick={() => onAbrirDetalle(t.id)}>
+                  Ver detalles <ChevronDer size={16} />
+                </button>
+              </article>
+            );
+          })}
+
+          {estado === 'listo' && resultados.length === 0 && (
             <div className="tarjeta estado-vacio">
               <span className="resultado-icono" style={{ margin: '0 auto' }}><Doc size={26} /></span>
               <h3>¿No encontraste lo que buscabas?</h3>

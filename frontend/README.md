@@ -3,9 +3,10 @@
 Web responsiva en **React + Vite**, basada en los mockups de Figma
 (pantallas: home, resultados, modal de voz, panel de accesibilidad, detalle).
 
-> Sin conexión a BD todavía: entidades, categorías y trámites son
-> **placeholders** en `src/data/placeholders.js` (estructura alineada
-> al modelo MySQL de `bd/portal_tramites.sql`).
+> Conectado a la API REST del backend (`src/api/portalApi.js`). Para desarrollo,
+> levanta primero el backend en `http://localhost:8080` (o define `VITE_API_URL`
+> en un archivo `frontend/.env`). El backend solo acepta CORS desde
+> `http://localhost:5173`.
 
 ## Ejecutar
 
@@ -29,7 +30,8 @@ persistencia en `localStorage`:
 ```
 src/
 ├── context/AccessibilityContext.jsx  # preferencias + data-attrs en <html>
-├── data/placeholders.js              # entidades, categorías, trámites
+├── api/portalApi.js                  # cliente HTTP de la API REST
+├── data/catalogo.js                  # metadatos visuales (iconos, colores, etiquetas)
 ├── pages/                            # Home, Resultados, Detalle
 ├── components/                       # Navbar, ModalVoz, PanelAccesibilidad,
 │                                     # BotonFlotante, iconos
