@@ -56,6 +56,7 @@ src/main/java/com/portaltramites/
 | GET | `/api/tramites/{id}` | Detalle con requisitos y etiquetas |
 | GET | `/api/tramites/{id}/requisitos` | Requisitos ordenados |
 | GET | `/api/tramites/{id}/relacionados?limite=3` | **Documentos relacionados por etiquetas compartidas**, ordenados por cantidad en común |
+| POST | `/api/voz/transcribir` | **Búsqueda por voz**: transcribe audio (DeepGram es-419 + keyterms) y resuelve la intención contra el catálogo; registra la consulta en `busqueda` |
 
 Ejemplos:
 
@@ -63,7 +64,20 @@ Ejemplos:
 GET /api/tramites?q=dni&entidad=RENIEC
 GET /api/tramites?tipo=GUIA
 GET /api/tramites/8/relacionados?limite=3
+POST /api/voz/transcribir   (Content-Type: audio/webm, cuerpo: bytes del audio)
 ```
+
+## Búsqueda por voz (DeepGram)
+
+1. Crea una API key en https://console.deepgram.com y pégala como
+   `DEEPGRAM_API_KEY` en `backend/.env.local` (ver `backend/.env`).
+2. El backend envía el audio a DeepGram (`nova-3`, `es-419`, `smart_format`,
+   con keyterms = etiquetas + siglas de entidades) y busca la transcripción
+   en el catálogo (`GET /api/tramites?q=` interno).
+3. La respuesta incluye `transcripcion`, `confianza` y los trámites que mejor
+   coinciden; la consulta queda guardada en la tabla `busqueda` (`origen=VOZ`).
+4. Sin API key, el endpoint responde 502 indicando la configuración faltante
+   (los demás endpoints siguen funcionando).
 
 ## Manejo de errores
 

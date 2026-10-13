@@ -86,8 +86,14 @@ public class GlobalExceptionHandler {
         return responder(HttpStatus.NOT_FOUND, "La ruta solicitada no existe", req);
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> integridadDatos(DataIntegrityViolationException ex,
+    @ExceptionHandler(DeepgramException.class)
+    public ResponseEntity<ErrorResponse> errorDeepgram(DeepgramException ex,
+                                                        HttpServletRequest req) {
+        log.warn("Fallo del servicio de voz en {}: {}", req.getRequestURI(), ex.getMessage());
+        return responder(HttpStatus.BAD_GATEWAY, ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)    public ResponseEntity<ErrorResponse> integridadDatos(DataIntegrityViolationException ex,
                                                           HttpServletRequest req) {
         log.warn("Violación de integridad en {}: {}", req.getRequestURI(), ex.getMostSpecificCause().getMessage());
         return responder(HttpStatus.CONFLICT, "La operación viola una restricción de la base de datos", req);
