@@ -1,16 +1,42 @@
-import { useState } from 'react';
-import { CATEGORIAS, entidadPorSiglas } from '../data/placeholders';
+import { useEffect, useState } from 'react';
+import { api } from '../api/portalApi';
+import { CATEGORIA_META, ENTIDADES_DESTACADAS, categoriaDe, colorEntidad } from '../data/catalogo';
 import { Doc, Engranaje, Grafico, Libro, Lupa, Mic } from '../components/iconos';
 
 const ICONOS_CATEGORIA = { doc: Doc, gear: Engranaje, chart: Grafico, book: Libro };
 
 export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
   const [texto, setTexto] = useState('');
+  const [entidades, setEntidades] = useState([]);
+  const [tipos, setTipos] = useState([]);
+  const [estado, setEstado] = useState('cargando');
+  const [error, setError] = useState('');
+
+  const cargar = () => {
+    setEstado('cargando');
+    setError('');
+    Promise.all([api.entidades(), api.tipos()])
+      .then(([ents, tips]) => {
+        setEntidades(ents);
+        setTipos(tips);
+        setEstado('listo');
+      })
+      .catch((e) => {
+        setError(e.message);
+        setEstado('error');
+      });
+  };
+
+  useEffect(cargar, []);
 
   const buscar = (e) => {
     e.preventDefault();
     onBuscar(texto.trim());
   };
+
+  const destacadas = ENTIDADES_DESTACADAS.map((siglas) =>
+    entidades.find((e) => e.siglas === siglas),
+  ).filter(Boolean);
 
   return (
     <>
@@ -36,40 +62,57 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
       <div className="contenedor">
         <section className="seccion" aria-labelledby="tit-categorias">
           <h2 id="tit-categorias">Explora por categorías principales</h2>
-          <div className="grid-4">
-            {CATEGORIAS.map((c) => {
-              const Icono = ICONOS_CATEGORIA[c.icono];
-              return (
-                <button key={c.id} className="tarjeta clicable" onClick={() => onCategoria(c.id)}>
-                  <span className="icono-cuadro"><Icono size={24} /></span>
-                  <h3>{c.nombre}</h3>
-                  <p>{c.descripcion}</p>
-                </button>
-              );
-            })}
-          </div>
+          {estado === 'cargando' && (
+            <div className="cargando" role="status"><span className="rueda" aria-hidden="true" /><span>Cargando categorías…</span></div>
+          )}
+          {estado === 'error' && (
+            <div className="tarjeta estado-vacio" role="alert">
+              <h3>No se pudo cargar el catálogo</h3>
+              <p>{error}</p>
+              <p style={{ marginTop: '1rem' }}>
+                <button className="btn-primario" onClick={cargar}>Reintentar</button>
+              </p>
+            </div>
+          )}
+          {estado === 'listo' && (
+            <div className="grid-4">
+              {tipos.map((t) => {
+                const meta = categoriaDe(t.nombre);
+                const Icono = ICONOS_CATEGORIA[meta.icono] ?? Doc;
+                return (
+                  <button key={t.id} className="tarjeta clicable" onClick={() => onCategoria(meta.id)}>
+                    <span className="icono-cuadro"><Icono size={24} /></span>
+                    <h3>{meta.nombre}</h3>
+                    <p>{meta.descripcion || t.descripcion}</p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className="seccion" aria-labelledby="tit-entidades" style={{ paddingBottom: '4rem' }}>
           <h2 id="tit-entidades">Trámites rápidos de entidades destacadas</h2>
-          <div className="grid-4">
-            {['SUNAT', 'RENIEC', 'SUNARP', 'ESSALUD'].map((siglas) => {
-              const e = entidadPorSiglas(siglas);
-              return (
-                <button key={siglas} className="tarjeta clicable" onClick={() => onEntidad(siglas)}>
+          {estado === 'cargando' && (
+            <div className="cargando" role="status"><span className="rueda" aria-hidden="true" /><span>Cargando entidades…</span></div>
+          )}
+          {estado === 'listo' && (
+            <div className="grid-4">
+              {destacadas.map((e) => (
+                <button key={e.siglas} className="tarjeta clicable" onClick={() => onEntidad(e.siglas)}>
                   <span className="entidad-cab">
-                    <span className="entidad-logo" style={{ background: e.color }} aria-hidden="true">
-                      {siglas[0]}
+                    <span className="entidad-logo" style={{ background: colorEntidad(e.siglas) }} aria-hidden="true">
+                      {e.siglas[0]}
                     </span>
                     <span>
                       <strong>{e.siglas}</strong>
-                      <span>{e.rubro}</span>
+                      <span>{e.sector}</span>
                     </span>
                   </span>
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </>
