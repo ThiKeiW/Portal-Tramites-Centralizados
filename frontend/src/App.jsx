@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -7,72 +8,83 @@ import Detalle from './pages/Detalle';
 import ModalVoz from './components/ModalVoz';
 import PanelAccesibilidad from './components/PanelAccesibilidad';
 import BotonFlotante from './components/BotonFlotante';
+import { Casa, Doc } from './components/iconos';
+
+// Rutas de la aplicacion (antes SPA por estado en App):
+//   /                -> Home
+//   /resultados      -> Resultados (query params: q, tipo, entidad)
+//   /tramite/:id     -> Detalle
+function NoEncontrado() {
+  return (
+    <div className="contenedor" style={{ paddingBottom: '4rem' }}>
+      <div className="tarjeta estado-vacio" style={{ marginTop: '2rem' }}>
+        <span className="resultado-icono" style={{ margin: '0 auto' }}><Doc size={26} /></span>
+        <h3>Pagina no encontrada</h3>
+        <p>La direccion que buscas no existe. Vuelve al inicio para continuar.</p>
+        <p style={{ marginTop: '1rem' }}>
+          <a className="btn-volver" href="/"><Casa size={18} /> Volver al inicio</a>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
-  const [vista, setVista] = useState({ nombre: 'home' });
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [vozAbierta, setVozAbierta] = useState(false);
   const [a11yAbierto, setA11yAbierto] = useState(false);
 
+  // Volver arriba al cambiar de ruta (antes: useEffect sobre `vista`).
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [vista]);
+  }, [pathname]);
 
-  const irInicio = () => setVista({ nombre: 'home' });
-  const irResultados = (query = '', tipo = null, entidad = null) =>
-    setVista({ nombre: 'resultados', query, tipo, entidad, clave: Date.now() });
-  const irDetalle = (id) => setVista({ nombre: 'detalle', id });
-
-  const navegarNavbar = (destino) => {
-    if (destino === 'inicio') irInicio();
-    else irResultados('', destino, null);
+  const irResultados = (query = '', tipo = null, entidad = null) => {
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (tipo) params.set('tipo', tipo);
+    if (entidad) params.set('entidad', entidad);
+    navigate(`/resultados${params.toString() ? '?' + params.toString() : ''}`);
   };
 
-  const navbarActivo =
-    vista.nombre === 'home' ? 'inicio' : vista.nombre === 'detalle' ? 'tramite' : vista.tipo ?? 'inicio';
+  const abrirVozYIr = (texto) => {
+    setVozAbierta(false);
+    irResultados(texto.trim());
+  };
 
   return (
     <AccessibilityProvider>
-      {vista.nombre !== 'home' && <Navbar activo={navbarActivo} onNavegar={navegarNavbar} />}
+      {pathname !== '/' && <Navbar />}
 
-      {vista.nombre === 'home' && (
-        <Home
-          onBuscar={(q) => irResultados(q)}
-          onVoz={() => setVozAbierta(true)}
-          onCategoria={(tipo) => irResultados('', tipo, null)}
-          onEntidad={(siglas) => irResultados('', null, siglas)}
+      <Routes>
+        <Route path="/" element={<Home onVoz={() => setVozAbierta(true)} />} />
+        <Route
+          path="/resultados"
+          element={
+            <Resultados
+              onVoz={() => setVozAbierta(true)}
+              onInicio={() => navigate('/')}
+            />
+          }
         />
-      )}
-
-      {vista.nombre === 'resultados' && (
-        <Resultados
-          key={vista.clave}
-          queryInicial={vista.query}
-          tipoInicial={vista.tipo}
-          entidadInicial={vista.entidad}
-          onAbrirDetalle={irDetalle}
-          onVoz={() => setVozAbierta(true)}
-          onInicio={irInicio}
+        <Route
+          path="/tramite/:id"
+          element={
+            <Detalle
+              onInicio={() => navigate('/')}
+            />
+          }
         />
-      )}
-
-      {vista.nombre === 'detalle' && (
-        <Detalle
-          id={vista.id}
-          onVolver={(tipo) => irResultados('', tipo ?? null, null)}
-          onAbrirDetalle={irDetalle}
-          onInicio={irInicio}
-        />
-      )}
+        <Route path="*" element={<NoEncontrado />} />
+      </Routes>
 
       <BotonFlotante onClick={() => setA11yAbierto(true)} />
       {a11yAbierto && <PanelAccesibilidad onCerrar={() => setA11yAbierto(false)} />}
       {vozAbierta && (
         <ModalVoz
           onCerrar={() => setVozAbierta(false)}
-          onResultado={(texto) => {
-            setVozAbierta(false);
-            irResultados(texto);
-          }}
+          onResultado={abrirVozYIr}
         />
       )}
     </AccessibilityProvider>

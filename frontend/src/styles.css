@@ -1,5 +1,5 @@
-/* Portal Único de Trámites — estilos base + accesibilidad.
-   El contraste, tamaño de texto y cursor se controlan con
+﻿/* Portal Ãšnico de TrÃ¡mites â€” estilos base + accesibilidad.
+   El contraste, tamaÃ±o de texto y cursor se controlan con
    data-attributes en <html> (ver AccessibilityContext). */
 
 * { box-sizing: border-box; }
@@ -75,7 +75,7 @@ html[data-contraste='oscuro'] {
   --link: #93c5fd;
 }
 
-/* Escala de grises: interfaz completamente monocromática */
+/* Escala de grises: interfaz completamente monocromÃ¡tica */
 html[data-contraste='gris'] {
   --bg: #ededed;
   --surface: #ffffff;
@@ -165,8 +165,8 @@ html[data-contraste='alto'] a { text-decoration: underline; }
 .btn-primario:hover { background: var(--primary-hover); }
 html[data-contraste='alto'] .btn-primario { border-width: 0.125rem; }
 
-/* Botón Volver al inicio: estilo propio en color acento, deliberadamente
-   distinto al primario. Se adapta a cada contraste vía --accent. */
+/* BotÃ³n Volver al inicio: estilo propio en color acento, deliberadamente
+   distinto al primario. Se adapta a cada contraste vÃ­a --accent. */
 .btn-volver {
   display: inline-flex; align-items: center; gap: 0.5rem;
   background: var(--surface); color: var(--accent);
@@ -201,12 +201,12 @@ html[data-contraste='oscuro'] .navbar { background: #0a1428; border-bottom: 0.06
 }
 html[data-contraste='alto'] .marca:hover { border-color: #fff; }
 .nav-links { display: flex; gap: 0.25rem; margin-left: auto; }
-.nav-links button {
+.nav-links a {
   background: transparent; border: 0.0625rem solid transparent; color: var(--on-primary);
   border-radius: 0.5rem; padding: 0.4375rem 0.875rem; font-size: 0.95rem;
 }
-.nav-links button:hover { background: rgba(255, 255, 255, 0.12); }
-.nav-links button.activo { border-color: rgba(255, 255, 255, 0.7); }
+.nav-links a:hover { background: rgba(255, 255, 255, 0.12); }
+.nav-links a.activo { border-color: rgba(255, 255, 255, 0.7); }
 
 /* ---------- Hero (home) ---------- */
 .hero {
@@ -290,7 +290,7 @@ html[data-contraste='alto'] .caja-busqueda { border: 0.125rem solid #000; }
 .filtros h2 { font-size: 0.95rem; letter-spacing: 0.02em; margin: 0; text-transform: uppercase; }
 .filtros-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
 .btn-texto { background: none; border: 0; color: var(--ink); font-size: 0.88rem; font-weight: 600; }
-/* Botón Limpiar todo: sólido y notorio */
+/* BotÃ³n Limpiar todo: sÃ³lido y notorio */
 .btn-limpiar-todo {
   background: var(--primary); color: var(--on-primary);
   border: 0.0625rem solid var(--primary); border-radius: 999px;
@@ -384,7 +384,7 @@ html[data-contraste='alto'] .segmento { border-color: #000; }
 .segmento-etiquetas span { flex: 1; font-size: 0.72rem; color: var(--muted); text-align: center; }
 .cajon-pie { padding: 0 1.25rem 1.25rem; }
 
-/* ---------- Botón flotante ---------- */
+/* ---------- BotÃ³n flotante ---------- */
 .btn-flotante {
   position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 50;
   width: 3.5rem; height: 3.5rem; border-radius: 999px; border: 0;
@@ -395,14 +395,15 @@ html[data-contraste='alto'] .segmento { border-color: #000; }
 
 /* ---------- Detalle ---------- */
 .migas { display: flex; align-items: center; gap: 0.5rem; padding: 1.25rem 0; font-size: 0.9rem; color: var(--muted); flex-wrap: wrap; }
-.migas button { background: none; border: 0; color: var(--link); font-size: inherit; padding: 0; }
+.migas button, .migas a { background: none; border: 0; color: var(--link); font-size: inherit; padding: 0; text-decoration: none; }
 /* El botón Volver conserva su estilo propio dentro de las migas */
 .migas .btn-volver {
-  background: var(--surface); color: var(--accent);
+  background: var(--surface) !important; color: var(--accent) !important;
   border: 0.1rem solid var(--accent); border-radius: 999px;
   font-size: 0.85rem; padding: 0.3rem 0.8rem;
   display: inline-flex; align-items: center; gap: 0.4rem;
 }
+.migas .btn-volver:hover { background: var(--accent) !important; border-color: var(--accent); color: #fff !important; text-decoration: none; }
 .migas .btn-volver:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 .migas strong { color: var(--ink); font-weight: 600; }
 .layout-detalle { display: grid; grid-template-columns: 1fr 22.5rem; gap: 1.5rem; align-items: start; padding-bottom: 4rem; }

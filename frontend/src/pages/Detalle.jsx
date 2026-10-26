@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/portalApi';
 import { MODALIDAD_LABEL, TIPO_LABEL, categoriaDe, formatoCosto, tipoId } from '../data/catalogo';
 import { Casa, ChevronDer, Escudo, Externo, Globo, Tarjeta } from '../components/iconos';
 
-export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
+export default function Detalle({ onInicio }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [tramite, setTramite] = useState(null);
   const [relacionados, setRelacionados] = useState([]);
   const [estado, setEstado] = useState('cargando');
@@ -57,9 +60,9 @@ export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
   return (
     <div className="contenedor">
       <nav className="migas" aria-label="Migas de pan">
-        <button className="btn-volver btn-volver-compacto" onClick={onInicio}><Casa size={16} /> Inicio</button>
+        <Link to="/" className="btn-volver btn-volver-compacto"><Casa size={16} /> Inicio</Link>
         <ChevronDer size={14} />
-        <button onClick={() => onVolver(idTipo)}>{categoria.nombre}</button>
+        <Link to={`/resultados?tipo=${idTipo}`}>{categoria.nombre}</Link>
         <ChevronDer size={14} />
         <strong aria-current="page">{tramite.nombre}</strong>
       </nav>
@@ -109,7 +112,7 @@ export default function Detalle({ id, onVolver, onAbrirDetalle, onInicio }) {
               <p className="descripcion">Sin documentos relacionados por etiquetas.</p>
             )}
             {relacionados.map((r) => (
-              <button key={r.id} className="relacionado" onClick={() => onAbrirDetalle(r.id)}>
+              <button key={r.id} className="relacionado" onClick={() => navigate(`/tramite/${r.id}`)}>
                 <strong>{r.nombre}</strong>
                 <span>{r.entidad?.nombre} - {r.entidad?.siglas}</span>
               </button>

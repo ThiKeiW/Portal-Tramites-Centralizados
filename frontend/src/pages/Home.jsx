@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api/portalApi';
 import { CATEGORIA_META, ENTIDADES_DESTACADAS, categoriaDe, colorEntidad } from '../data/catalogo';
 import { Doc, Engranaje, Grafico, Libro, Lupa, Mic } from '../components/iconos';
 
 const ICONOS_CATEGORIA = { doc: Doc, gear: Engranaje, chart: Grafico, book: Libro };
 
-export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
+export default function Home({ onVoz }) {
+  const navigate = useNavigate();
   const [texto, setTexto] = useState('');
   const [entidades, setEntidades] = useState([]);
   const [tipos, setTipos] = useState([]);
@@ -29,9 +31,16 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
 
   useEffect(cargar, []);
 
+  const irResultados = (params) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v),
+    ).toString();
+    navigate(`/resultados${qs ? '?' + qs : ''}`);
+  };
+
   const buscar = (e) => {
     e.preventDefault();
-    onBuscar(texto.trim());
+    irResultados({ q: texto.trim() });
   };
 
   const destacadas = ENTIDADES_DESTACADAS.map((siglas) =>
@@ -80,7 +89,7 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
                 const meta = categoriaDe(t.nombre);
                 const Icono = ICONOS_CATEGORIA[meta.icono] ?? Doc;
                 return (
-                  <button key={t.id} className="tarjeta clicable" onClick={() => onCategoria(meta.id)}>
+                  <button key={t.id} className="tarjeta clicable" onClick={() => irResultados({ tipo: meta.id })}>
                     <span className="icono-cuadro"><Icono size={24} /></span>
                     <h3>{meta.nombre}</h3>
                     <p>{meta.descripcion || t.descripcion}</p>
@@ -99,7 +108,7 @@ export default function Home({ onBuscar, onVoz, onCategoria, onEntidad }) {
           {estado === 'listo' && (
             <div className="grid-4">
               {destacadas.map((e) => (
-                <button key={e.siglas} className="tarjeta clicable" onClick={() => onEntidad(e.siglas)}>
+                <button key={e.siglas} className="tarjeta clicable" onClick={() => irResultados({ entidad: e.siglas })}>
                   <span className="entidad-cab">
                     <span className="entidad-logo" style={{ background: colorEntidad(e.siglas) }} aria-hidden="true">
                       {e.siglas[0]}

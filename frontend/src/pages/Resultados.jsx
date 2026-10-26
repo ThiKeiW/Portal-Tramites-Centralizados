@@ -1,18 +1,44 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/portalApi';
 import { TIPO_LABEL, categoriaDe, tipoId } from '../data/catalogo';
 import { Casa, ChevronDer, Doc, Lupa, Mic, X } from '../components/iconos';
 
-export default function Resultados({ queryInicial, tipoInicial, entidadInicial, onAbrirDetalle, onVoz, onInicio }) {
-  const [query, setQuery] = useState(queryInicial ?? '');
-  const [texto, setTexto] = useState(queryInicial ?? '');
-  const [tipos, setTipos] = useState(() => (tipoInicial ? new Set([tipoInicial]) : new Set()));
-  const [entidades, setEntidades] = useState(() => (entidadInicial ? new Set([entidadInicial]) : new Set()));
+// La pagina se deriva de la URL (/resultados?q=&tipo=&entidad=): los filtros
+// y la busqueda se sincronizan con searchParams (antes venian del estado App).
+export default function Resultados({ onVoz, onInicio }) {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [nonce, setNonce] = useState(0);
+
+  const query = searchParams.get('q') ?? '';
+  const tipoInicial = searchParams.get('tipo');
+  const entidadInicial = searchParams.get('entidad');
+
+  const [texto, setTexto] = useState(query);
+  const [tipos, setTipos] = useState(() => new Set(tipoInicial ? tipoInicial.split(',') : []));
+  const [entidades, setEntidades] = useState(() => new Set(entidadInicial ? entidadInicial.split(',') : []));
   const [base, setBase] = useState([]);
   const [catalogoEntidades, setCatalogoEntidades] = useState([]);
   const [catalogoTipos, setCatalogoTipos] = useState([]);
   const [estado, setEstado] = useState('cargando');
   const [error, setError] = useState('');
+
+  // Reset de los filtros locales si se llega con otros params (nueva navegacion).
+  const paramsClave = `${tipoInicial ?? ''}|${entidadInicial ?? ''}`;
+  const paramsClavePrev = useRef(paramsClave);
+  useEffect(() => {
+    if (paramsClave !== paramsClavePrev.current) {
+      paramsClavePrev.current = paramsClave;
+      setTipos(new Set(tipoInicial ? tipoInicial.split(',') : []));
+      setEntidades(new Set(entidadInicial ? entidadInicial.split(',') : []));
+    }
+  }, [paramsClave, tipoInicial, entidadInicial]);
+
+  // Sincroniza URL con la q: al cambiar q reinicia los textos.
+  useEffect(() => {
+    setTexto(query);
+  }, [query]);
 
   useEffect(() => {
     let vivo = true;
@@ -32,25 +58,31 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
         setEstado('error');
       });
     return () => { vivo = false; };
-  }, [query]);
+  }, [query, nonce]);
 
-  const alternar = (set, setSet, valor) => {
-    setSet((prev) => {
-      const n = new Set(prev);
-      if (n.has(valor)) n.delete(valor);
-      else n.add(valor);
-      return n;
-    });
+  const actualizarParams = (nuevosTipos, nuevasEntidades) => {
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (nuevosTipos.size > 0) params.set('tipo', [...nuevosTipos].join(','));
+    if (nuevasEntidades.size > 0) params.set('entidad', [...nuevasEntidades].join(','));
+    setSearchParams(params, { replace: true });
   };
 
-  const resultados = useMemo(() => {
-    const lista = base.filter((t) => {
-      const coincideTipo = tipos.size === 0 || tipos.has(tipoId(t.tipo?.nombre));
-      const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad?.siglas);
-      return coincideTipo && coincideEntidad;
-    });
-    return [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-  }, [base, tipos, entidades]);
+  const alternarEntidad = (sigla) => {
+    const n = new Set(entidades);
+    if (n.has(sigla)) n.delete(sigla);
+    else n.add(sigla);
+    setEntidades(n);
+    actualizarParams(tipos, n);
+  };
+
+  const alternarTipo = (id) => {
+    const n = new Set(tipos);
+    if (n.has(id)) n.delete(id);
+    else n.add(id);
+    setTipos(n);
+    actualizarParams(n, entidades);
+  };
 
   const conteos = useMemo(() => {
     const m = {};
@@ -73,14 +105,31 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
   const limpiarFiltros = () => {
     setTipos(new Set());
     setEntidades(new Set());
+    actualizarParams(new Set(), new Set());
   };
 
   const submit = (e) => {
     e.preventDefault();
-    setQuery(texto.trim());
+    const nuevoQuery = texto.trim();
+    const params = new URLSearchParams();
+    if (nuevoQuery) params.set('q', nuevoQuery);
+    if (tipos.size > 0) params.set('tipo', [...tipos].join(','));
+    if (entidades.size > 0) params.set('entidad', [...entidades].join(','));
+    setSearchParams(params);
   };
 
+  const resultados = useMemo(() => {
+    const lista = base.filter((t) => {
+      const coincideTipo = tipos.size === 0 || tipos.has(tipoId(t.tipo?.nombre));
+      const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad?.siglas);
+      return coincideTipo && coincideEntidad;
+    });
+    return [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  }, [base, tipos, entidades]);
+
   const entidadesVisibles = catalogoEntidades.filter((e) => (conteos[e.siglas] ?? 0) > 0);
+
+  const abrirDetalle = (id) => navigate(`/tramite/${id}`);
 
   return (
     <>
@@ -123,7 +172,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
                 <input
                   type="checkbox"
                   checked={entidades.has(e.siglas)}
-                  onChange={() => alternar(entidades, setEntidades, e.siglas)}
+                  onChange={() => alternarEntidad(e.siglas)}
                 />
                 {e.siglas}
                 <span className="conteo">({conteos[e.siglas] ?? 0})</span>
@@ -142,7 +191,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
                   <input
                     type="checkbox"
                     checked={tipos.has(meta.id)}
-                    onChange={() => alternar(tipos, setTipos, meta.id)}
+                    onChange={() => alternarTipo(meta.id)}
                   />
                   {meta.nombre}
                   <span className="conteo">({conteosTipo[meta.id] ?? 0})</span>
@@ -167,7 +216,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
               <h3>No se pudo cargar la búsqueda</h3>
               <p>{error}</p>
               <p style={{ marginTop: '1rem' }}>
-                <button className="btn-primario" onClick={() => setQuery((q) => q)}>Reintentar</button>
+                <button className="btn-primario" onClick={() => setNonce((n) => n + 1)}>Reintentar</button>
               </p>
             </div>
           )}
@@ -179,7 +228,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
                 <span className="resultado-icono"><Doc size={24} /></span>
                 <div className="resultado-cuerpo">
                   <h3>
-                    <button className="btn-texto" style={{ fontSize: 'inherit', textAlign: 'left' }} onClick={() => onAbrirDetalle(t.id)}>
+                    <button className="btn-texto" style={{ fontSize: 'inherit', textAlign: 'left' }} onClick={() => abrirDetalle(t.id)}>
                       {t.nombre}
                     </button>
                     <span className={`insignia insignia-tipo ${idTipo === 'servicio' ? 'servicio' : ''}`}>{TIPO_LABEL[idTipo]}</span>
@@ -187,7 +236,7 @@ export default function Resultados({ queryInicial, tipoInicial, entidadInicial, 
                   </h3>
                   <p>{t.descripcion}</p>
                 </div>
-                <button className="btn-primario" onClick={() => onAbrirDetalle(t.id)}>
+                <button className="btn-primario" onClick={() => abrirDetalle(t.id)}>
                   Ver detalles <ChevronDer size={16} />
                 </button>
               </article>
