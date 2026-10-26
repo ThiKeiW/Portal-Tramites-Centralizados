@@ -42,4 +42,33 @@ export const api = {
 
   /** Documentos relacionados por etiquetas compartidas. */
   relacionados: (id, limite = 3) => pedir(`/api/tramites/${id}/relacionados?limite=${limite}`),
+
+  /**
+   * Búsqueda por voz: envía el audio al backend, que lo transcribe con
+   * DeepGram (es-419 + keyterms) y resuelve la intención contra el catálogo.
+   * Responde { transcripcion, confianza, tramites }.
+   */
+  transcribirVoz: async (audioBlob) => {
+    let res;
+    try {
+      res = await fetch(`${API_URL}/api/voz/transcribir`, {
+        method: 'POST',
+        headers: { 'Content-Type': audioBlob.type || 'audio/webm' },
+        body: audioBlob,
+      });
+    } catch {
+      throw new Error(`No se pudo conectar con la API en ${API_URL}. Verifica que el backend esté corriendo.`);
+    }
+    if (!res.ok) {
+      let detalle = '';
+      try {
+        const cuerpo = await res.json();
+        detalle = cuerpo.mensaje ?? '';
+      } catch {
+        /* la respuesta no trae JSON */
+      }
+      throw new Error(detalle || `La API respondió con error ${res.status}.`);
+    }
+    return res.json();
+  },
 };
