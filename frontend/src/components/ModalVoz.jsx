@@ -18,7 +18,9 @@ export default function ModalVoz({ onCerrar, onResultado }) {
   const [segundos, setSegundos] = useState(0);
   const [progreso, setProgreso] = useState(0);
   const [error, setError] = useState('');
+  const [aviso, setAviso] = useState('');
   const recorderRef = useRef(null);
+  const inicioRef = useRef(0);
   const partesRef = useRef([]);
   const timersRef = useRef([]);
   const vivoRef = useRef(true);
@@ -55,6 +57,7 @@ export default function ModalVoz({ onCerrar, onResultado }) {
     setTexto('');
     setSegundos(0);
     setProgreso(0);
+    setAviso('');
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -74,6 +77,7 @@ export default function ModalVoz({ onCerrar, onResultado }) {
     };
     recorder.onstop = () => enviar(new Blob(partesRef.current, { type: recorder.mimeType || 'audio/webm' }));
     recorderRef.current = recorder;
+    inicioRef.current = Date.now();
     recorder.start(250);
     setFase('grabando');
 
@@ -90,6 +94,14 @@ export default function ModalVoz({ onCerrar, onResultado }) {
   };
 
   const detener = () => {
+    // Evita webms degenerados: menos de 1 segundo el navegador casi no
+    // genera clusters y DeepGram responde "corrupt or unsupported data".
+    if (Date.now() - inicioRef.current < 1000) {
+      setAviso('Habla un poco más… (al menos 1 segundo)');
+      const t = setTimeout(() => setAviso(''), 2200);
+      timersRef.current.push(t);
+      return;
+    }
     timersRef.current.forEach((t) => { clearTimeout(t); clearInterval(t); });
     timersRef.current = [];
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
@@ -123,7 +135,11 @@ export default function ModalVoz({ onCerrar, onResultado }) {
       }, 100);
       timersRef.current.push(avance);
     } catch (e) {
-      fallar(e.message);
+      // Traduce el error tecnico de DeepGram a algo util para el usuario
+      const msg = /corrupt or unsupported|ilegible/i.test(e.message)
+        ? 'El audio llegó ilegible al servidor. Vuelve a intentarlo hablando durante 1–3 segundos.'
+        : e.message;
+      fallar(msg);
     }
   };
 
@@ -156,6 +172,7 @@ export default function ModalVoz({ onCerrar, onResultado }) {
         <div className="transcripcion" aria-live="polite">
           {fase === 'permiso' && <span className="estado">SOLICITANDO MICRÓFONO…</span>}
           {fase === 'grabando' && <span className="estado">ESCUCHANDO… {segundos}s (toca el micrófono para buscar)</span>}
+          {aviso && <span className="estado" role="status">{aviso}</span>}
           {fase === 'enviando' && <span className="estado">TRANSCRIBIENDO…</span>}
           {fase === 'confirmando' && <span className="estado">ESCUCHANDO…</span>}
           {texto && <blockquote>“{texto}”</blockquote>}

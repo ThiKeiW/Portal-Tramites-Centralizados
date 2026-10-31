@@ -10,6 +10,8 @@ import com.portaltramites.repository.BusquedaRepository;
 import com.portaltramites.repository.EntidadRepository;
 import com.portaltramites.repository.EtiquetaRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class VozService {
+
+    private static final Logger log = LoggerFactory.getLogger(VozService.class);
 
     private static final int MAX_AUDIO_BYTES = 10 * 1024 * 1024;
     private static final int MAX_TRAMITES_SUGERIDOS = 5;
@@ -98,6 +102,16 @@ public class VozService {
         etiquetaRepository.findAll().forEach(e -> keyterms.add(e.getNombre()));
         entidadRepository.findAll().forEach(e -> keyterms.add(e.getSiglas()));
 
+        // Diagnostico: si DeepGram responde "corrupt or unsupported data",
+        // estos datos dicen que formato real recibio el backend. Magic bytes:
+        // 1A 45 DF A3 = WebM/EBML | 52 49 46 46 = RIFF/WAV | FF FB = MP3.
+        StringBuilder hex = new StringBuilder();
+        for (int i = 0; i < Math.min(16, audio.length); i++) {
+            hex.append(String.format("%02X ", audio[i]));
+        }
+        log.info("Voz: contentType={}, bytes={}, primeros bytes: {}",
+                contentType, audio.length, hex);
+
         String url = UriComponentsBuilder.fromPath("/v1/listen")
                 .queryParam("model", model)
                 .queryParam("language", language)
@@ -113,7 +127,9 @@ public class VozService {
                     .uri(url)
                     .header("Authorization", "Token " + apiKey)
                     .contentType(MediaType.parseMediaType(
-                            contentType != null && !contentType.isBlank() ? contentType : "audio/webm"))
+                            contentType != null && !contentType.isBlank()
+                                    ? contentType.split(";")[0].trim()
+                                    : "audio/webm"))
                     .body(audio)
                     .retrieve()
                     .onStatus(s -> s.isError(), (req, res) -> {
