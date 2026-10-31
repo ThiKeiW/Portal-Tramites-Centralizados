@@ -53,7 +53,7 @@ export const api = {
     try {
       res = await fetch(`${API_URL}/api/voz/transcribir`, {
         method: 'POST',
-        headers: { 'Content-Type': audioBlob.type || 'audio/webm' },
+        headers: { 'Content-Type': audioBlob.type || 'audio/wav' },
         body: audioBlob,
       });
     } catch {

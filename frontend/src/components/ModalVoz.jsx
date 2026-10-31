@@ -2,14 +2,39 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../api/portalApi';
 import { Check, Mic, X } from './iconos';
 
-// Búsqueda por voz real: graba con el micrófono (MediaRecorder), envía el
-// audio al backend (DeepGram es-419 + keyterms) y redirige con la transcripción.
+// Búsqueda por voz real: captura PCM con Web Audio API, lo empaqueta como WAV
+// en el cliente y lo envía al backend (DeepGram es-419 + keyterms).
+// Se usa WAV en lugar de MediaRecorder/webm porque algunos navegadores
+// generan un stream webm que DeepGram rechaza como "corrupt or unsupported".
 const MAX_SEGUNDOS = 15;
 
-function elegirMimeType() {
-  if (typeof MediaRecorder === 'undefined') return '';
-  const candidatos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
-  return candidatos.find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+function codificarWav(muestras, tasa) {
+  const n = muestras.length;
+  const total = 44 + n * 2;
+  const buf = new ArrayBuffer(total);
+  const v = new DataView(buf);
+  const texto = (off, s) => {
+    for (let i = 0; i < s.length; i += 1) v.setUint8(off + i, s.charCodeAt(i));
+  };
+  texto(0, 'RIFF');
+  v.setUint32(4, total - 8, true);
+  texto(8, 'WAVE');
+  texto(12, 'fmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); // PCM
+  v.setUint16(22, 1, true); // mono
+  v.setUint32(24, tasa, true);
+  v.setUint32(28, tasa * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  texto(36, 'data');
+  v.setUint32(40, n * 2, true);
+  let off = 44;
+  for (let i = 0; i < n; i += 1, off += 2) {
+    const m = Math.max(-1, Math.min(1, muestras[i]));
+    v.setInt16(off, m < 0 ? m * 0x8000 : m * 0x7FFF, true);
+  }
+  return new Blob([buf], { type: 'audio/wav' });
 }
 
 export default function ModalVoz({ onCerrar, onResultado }) {
@@ -19,17 +44,33 @@ export default function ModalVoz({ onCerrar, onResultado }) {
   const [progreso, setProgreso] = useState(0);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
-  const recorderRef = useRef(null);
   const inicioRef = useRef(0);
-  const partesRef = useRef([]);
   const timersRef = useRef([]);
   const vivoRef = useRef(true);
+  const grabandoRef = useRef(false);
+  const ctxRef = useRef(null);
+  const streamRef = useRef(null);
+  const procRef = useRef(null);
+  const pcmRef = useRef([]);
+  const tasaRef = useRef(16000);
+
+  const apagarAudio = () => {
+    grabandoRef.current = false;
+    try { procRef.current?.disconnect(); } catch { /* ya desconectado */ }
+    try { streamRef.current?.getTracks().forEach((tr) => tr.stop()); } catch { /* ya detenido */ }
+    procRef.current = null;
+    streamRef.current = null;
+    const ctx = ctxRef.current;
+    ctxRef.current = null;
+    if (ctx && ctx.state !== 'closed') {
+      try { ctx.close(); } catch { /* ya cerrado */ }
+    }
+  };
 
   const limpiar = () => {
     timersRef.current.forEach((t) => { clearTimeout(t); clearInterval(t); });
     timersRef.current = [];
-    try { recorderRef.current?.stream?.getTracks().forEach((tr) => tr.stop()); } catch { /* ya detenido */ }
-    recorderRef.current = null;
+    apagarAudio();
   };
 
   useEffect(() => {
@@ -60,7 +101,9 @@ export default function ModalVoz({ onCerrar, onResultado }) {
     setAviso('');
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
     } catch {
       fallar('No se pudo acceder al micrófono. Revisa los permisos del navegador.');
       return;
@@ -69,16 +112,41 @@ export default function ModalVoz({ onCerrar, onResultado }) {
       stream.getTracks().forEach((tr) => tr.stop());
       return;
     }
-    const mimeType = elegirMimeType();
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    partesRef.current = [];
-    recorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) partesRef.current.push(e.data);
+    let ctx;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') await ctx.resume();
+    } catch {
+      stream.getTracks().forEach((tr) => tr.stop());
+      fallar('No se pudo iniciar el audio del navegador.');
+      return;
+    }
+    if (!vivoRef.current || ctx.state === 'closed') {
+      stream.getTracks().forEach((tr) => tr.stop());
+      if (ctx.state !== 'closed') ctx.close();
+      return;
+    }
+    const fuente = ctx.createMediaStreamSource(stream);
+    // El sink con ganancia 0 mantiene vivo el ScriptProcessor sin escuchar
+    // la propia voz por los altavoces.
+    const silencio = ctx.createGain();
+    silencio.gain.value = 0;
+    const proc = ctx.createScriptProcessor(4096, 1, 1);
+    pcmRef.current = [];
+    tasaRef.current = ctx.sampleRate;
+    const maxMuestras = (MAX_SEGUNDOS + 5) * tasaRef.current;
+    proc.onaudioprocess = (e) => {
+      if (!grabandoRef.current || pcmRef.current.reduce((a, c) => a + c.length, 0) >= maxMuestras) return;
+      pcmRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
     };
-    recorder.onstop = () => enviar(new Blob(partesRef.current, { type: recorder.mimeType || 'audio/webm' }));
-    recorderRef.current = recorder;
+    fuente.connect(proc);
+    proc.connect(silencio);
+    silencio.connect(ctx.destination);
+    procRef.current = proc;
+    streamRef.current = stream;
+    ctxRef.current = ctx;
+    grabandoRef.current = true;
     inicioRef.current = Date.now();
-    recorder.start(250);
     setFase('grabando');
 
     const tick = setInterval(() => {
@@ -94,8 +162,7 @@ export default function ModalVoz({ onCerrar, onResultado }) {
   };
 
   const detener = () => {
-    // Evita webms degenerados: menos de 1 segundo el navegador casi no
-    // genera clusters y DeepGram responde "corrupt or unsupported data".
+    // Menos de 1 segundo no da material suficiente para transcribir.
     if (Date.now() - inicioRef.current < 1000) {
       setAviso('Habla un poco más… (al menos 1 segundo)');
       const t = setTimeout(() => setAviso(''), 2200);
@@ -104,10 +171,23 @@ export default function ModalVoz({ onCerrar, onResultado }) {
     }
     timersRef.current.forEach((t) => { clearTimeout(t); clearInterval(t); });
     timersRef.current = [];
-    if (recorderRef.current && recorderRef.current.state !== 'inactive') {
-      setFase('enviando');
-      recorderRef.current.stop();
+    grabandoRef.current = false;
+    const partes = pcmRef.current;
+    const tasa = tasaRef.current;
+    apagarAudio();
+    const total = partes.reduce((a, c) => a + c.length, 0);
+    if (total < tasa / 2) {
+      fallar('La grabación fue demasiado corta. Inténtalo de nuevo hablando durante 1–3 segundos.');
+      return;
     }
+    const muestras = new Float32Array(total);
+    let off = 0;
+    for (const p of partes) {
+      muestras.set(p, off);
+      off += p.length;
+    }
+    setFase('enviando');
+    enviar(codificarWav(muestras, tasa));
   };
 
   const enviar = async (blob) => {
@@ -135,11 +215,7 @@ export default function ModalVoz({ onCerrar, onResultado }) {
       }, 100);
       timersRef.current.push(avance);
     } catch (e) {
-      // Traduce el error tecnico de DeepGram a algo util para el usuario
-      const msg = /corrupt or unsupported|ilegible/i.test(e.message)
-        ? 'El audio llegó ilegible al servidor. Vuelve a intentarlo hablando durante 1–3 segundos.'
-        : e.message;
-      fallar(msg);
+      fallar(e.message);
     }
   };
 
