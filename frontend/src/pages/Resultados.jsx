@@ -119,12 +119,13 @@ export default function Resultados({ onVoz, onInicio }) {
   };
 
   const resultados = useMemo(() => {
-    const lista = base.filter((t) => {
+    // Se respeta el orden del backend: con q va por relevancia (puntaje
+    // descendente); sin q viene ordenado alfabéticamente.
+    return base.filter((t) => {
       const coincideTipo = tipos.size === 0 || tipos.has(tipoId(t.tipo?.nombre));
       const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad?.siglas);
       return coincideTipo && coincideEntidad;
     });
-    return [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   }, [base, tipos, entidades]);
 
   const entidadesVisibles = catalogoEntidades.filter((e) => (conteos[e.siglas] ?? 0) > 0);
@@ -145,7 +146,7 @@ export default function Resultados({ onVoz, onInicio }) {
               aria-label="Buscar trámite, servicio o documento"
             />
             {texto && (
-              <button type="button" className="btn-limpiar" aria-label="Limpiar búsqueda" onClick={() => { setTexto(''); setQuery(''); }}>
+              <button type="button" className="btn-limpiar" aria-label="Limpiar búsqueda" onClick={() => { setTexto(''); setSearchParams((p) => { const q2 = new URLSearchParams(p); q2.delete('q'); return q2; }); }}>
                 <X size={20} />
               </button>
             )}
@@ -204,7 +205,8 @@ export default function Resultados({ onVoz, onInicio }) {
         <section aria-live="polite">
           <div className="resultados-cab">
             <p>Se encontraron <strong>{resultados.length} resultado{resultados.length === 1 ? '' : 's'}</strong>
-              {query && <> para “{query}”</>} <span className="orden-fijo">(ordenados A–Z)</span></p>
+              {query && <> para “{query}”</>}
+              <span className="orden-fijo">{query ? '(ordenados por relevancia)' : '(ordenados A–Z)'}</span></p>
           </div>
 
           {estado === 'cargando' && (

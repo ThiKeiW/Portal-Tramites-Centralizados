@@ -11,6 +11,7 @@ Portal web que **centraliza el acceso** a trámites, servicios, reportes, docume
 La plataforma centraliza la **información (no la ejecución)** de trámites y servicios públicos. Incorpora:
 
 - 🔍 **Búsqueda por voz** mediante la API de **Deepgram**, con reconocimiento de intención y redirección automática al trámite o página oficial correspondiente.
+- 🔎 **Búsqueda textual por palabras clave con orden por relevancia**: acepta consultas en lenguaje natural («quisiera declarar mi información financiera», «entrega de DNI»), descarta muletillas y pondera cada palabra según su selectividad, sin exigir la frase exacta del catálogo.
 - ♿ **Panel de accesibilidad** configurable con tres ajustes: tamaño de texto, contraste y cursor.
 - 🗂️ Clasificación y filtrado de contenidos por **entidad** y por **tipo** (trámite, servicio, reporte, documento, guía).
 - 📱 Versión **web responsiva**.
@@ -41,7 +42,7 @@ Cada entidad pública mantiene su propio portal, con distinta estructura de nave
 
 ## 🧬 Modelo de Base de Datos
 
-El script principal se encuentra en **`bd/portal_tramites.sql`** (MySQL 8.x). Incluye:
+El script canónico se encuentra en **`bd/bd_tramites.sql`** (MySQL 8.x), catálogo consolidado con **275 trámites, 361 requisitos y 286 etiquetas**; el esquema y la semilla original quedan en `bd/portal_tramites.sql`. Incluye:
 
 - **`entidad`** — entidades públicas (nombre, siglas, sector, descripción, `sitio_web` oficial, estado).
 - **`tipo_contenido`** — catálogo: `TRAMITE`, `SERVICIO`, `REPORTE`, `DOCUMENTO`, `GUIA`.
@@ -55,9 +56,10 @@ El script principal se encuentra en **`bd/portal_tramites.sql`** (MySQL 8.x). In
 ```
 Portal-Tramites-Centralizados/
 ├── bd/
-│   └── portal_tramites.sql     # Esquema y datos iniciales de MySQL
-├── backend/                    # API REST (Spring Boot) — rama feature/backend
-├── frontend/                   # Web responsiva + accesibilidad — rama feature/frontend
+│   ├── bd_tramites.sql         # Catálogo consolidado (275 trámites) — canónico
+│   └── portal_tramites.sql     # Esquema y semilla original
+├── backend/                    # API REST (Spring Boot)
+├── frontend/                   # Web responsiva + accesibilidad
 └── README.md
 ```
 
@@ -81,6 +83,13 @@ main                          # 🟢 Producción / estable
 - `develop` integra las features.
 - `main` solo recibe `develop` tras validación.
 - Para requerimientos de accesibilidad u otras funcionalidades, usar `feature/` dedicadas.
+
+## 📝 Registro de cambios
+
+### 2026-11 — Búsqueda y voz
+- **Búsqueda por relevancia** (backend + UI): el buscador ya no exige la frase exacta. Extrae palabras clave de la consulta en lenguaje natural, descarta muletillas («quisiera», «dónde», «quiero ver»…) y puntúa cada trámite por dónde coinciden (nombre > etiquetas > entidad > descripción), ponderando la **rareza de cada palabra** en el catálogo (IDF). Los resultados se muestran ordenados por relevancia en lugar de alfabéticamente.
+- **Búsqueda por voz robusta**: captura de audio **PCM → WAV en el cliente** (Web Audio API), porque los streams `webm` de `MediaRecorder` eran rechazados por Deepgram como corruptos. Se añadió registro de diagnóstico en logs (primeros bytes del audio), mínimo de 1 s de grabación y mensaje claro ante errores de audio.
+- **Catálogo consolidado** integrado en `develop`: 275 trámites, 361 requisitos y 286 etiquetas (`bd/bd_tramites.sql`).
 
 ## 👥 Entidades Públicas Incluidas
 
