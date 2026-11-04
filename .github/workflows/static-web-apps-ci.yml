@@ -1,0 +1,30 @@
+# Publica el frontend (Vite + React) en Azure Static Web Apps.
+# Requisitos previos (una sola vez):
+#   1) az staticwebapp create (sin --source) + leer el token:
+#        az staticwebapp secrets reset --name swa-portal-frontend-tk --resource-group rg-portal-tramites
+#   2) Guardar el token en GitHub: AZURE_STATIC_WEB_APPS_API_TOKEN
+#      (portal > Settings > Secrets and variables > Actions, o gh secret set)
+# El build hornea VITE_API_URL (URL del backend en Container Apps).
+# TRAMITES: reemplaza FQDN-BACKEND y AZURE_STATIC_WEB_APPS_API_TOKEN.
+name: static-web-apps-ci
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+jobs:
+  build_and_deploy_job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build y deploy del frontend
+        uses: Azure/static-web-apps@v1  
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ github.token }}
+          action: upload
+          app_location: /frontend
+          output_location: dist
+        env:
+          VITE_API_URL: https://ca-portal-backend.yellowpond-8e7d345d.eastus2.azurecontainerapps.io

@@ -3,7 +3,6 @@
 -- Modelo de base de datos en MySQL 8.x
 -- Organiza y filtra trámites/servicios/documentos/guías por entidad
 -- =====================================================================
-
 DROP DATABASE IF EXISTS portal_tramites_db;
 CREATE DATABASE portal_tramites_db
     CHARACTER SET utf8mb4

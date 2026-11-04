@@ -1,0 +1,7 @@
+target/
+cert/
+.env
+.env.local
+*.log
+.idea/
+README*

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portaltramites.error.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -26,14 +27,23 @@ import java.util.List;
 
 /**
  * Seguridad: sin autenticación (API pública de solo lectura), pero con CORS
- * restringido únicamente al origen del frontend (Vite: http://localhost:5173).
- * Los errores 401/403 se devuelven en el mismo formato JSON de ErrorResponse.
+ * restringido a los orígenes del frontend declarados en CORS_ORIGINS
+ * (separados por coma; por defecto el Vite local http://localhost:5173).
+ * En producción (Azure) la variable de entorno incluye el dominio del
+ * frontend publicado (p. ej. https://swa-xxxx.azurestaticapps.net) junto al
+ * local, para poder seguir probando con Vite. Los errores 401/403 se
+ * devuelven en el mismo formato JSON de ErrorResponse.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final String ORIGEN_FRONTEND = "http://localhost:5173";
+    /**
+     * Origenes web con acceso CORS: variable de ambiente CORS_ORIGINS,
+     * separados por comas. Sin definir, solo se permite el frontend local.
+     */
+    @Value("${CORS_ORIGINS:http://localhost:5173}")
+    private String origenesPermitidos;
 
     private final ObjectMapper objectMapper;
 
@@ -60,7 +70,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(ORIGEN_FRONTEND));
+        config.setAllowedOrigins(java.util.Arrays.stream(origenesPermitidos.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false);
