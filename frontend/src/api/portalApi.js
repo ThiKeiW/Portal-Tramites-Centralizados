@@ -2,26 +2,41 @@
 // La URL se puede sobreescribir con la variable VITE_API_URL (archivo .env).
 // El backend solo acepta peticiones CORS desde http://localhost:5173.
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:18080';
 
-async function pedir(ruta) {
-  let res;
-  try {
-    res = await fetch(`${API_URL}${ruta}`);
-  } catch {
-    throw new Error(`No se pudo conectar con la API en ${API_URL}. Verifica que el backend esté corriendo.`);
-  }
-  if (!res.ok) {
-    let detalle = '';
+// Cache de respuestas estables (catálogos): un solo fetch por recurso, se
+// comparte entre Home y Resultados y sobrevive a la navegación dentro de la
+// sesión (evita re-consultar a la BD en la nube en cada montaje de página).
+const cache = new Map();
+
+function pedir(ruta) {
+  const enCache = cache.get(ruta);
+  if (enCache) return enCache;
+  const promesa = (async () => {
+    let res;
     try {
-      const cuerpo = await res.json();
-      detalle = cuerpo.mensaje ?? '';
+      res = await fetch(`${API_URL}${ruta}`);
     } catch {
-      /* la respuesta no trae JSON */
+      throw new Error(`No se pudo conectar con la API en ${API_URL}. Verifica que el backend esté corriendo.`);
     }
-    throw new Error(detalle || `La API respondió con error ${res.status}.`);
+    if (!res.ok) {
+      throw new Error((await extraerMensaje(res)) || `La API respondió con error ${res.status}.`);
+    }
+    return res.json();
+  })();
+  cache.set(ruta, promesa);
+  // Al fallar, descartar la promesa en cache para poder reintentar.
+  promesa.catch(() => cache.delete(ruta));
+  return promesa;
+}
+
+async function extraerMensaje(res) {
+  try {
+    const cuerpo = await res.json();
+    return cuerpo.mensaje ?? '';
+  } catch {
+    return '';
   }
-  return res.json();
 }
 
 export const api = {
@@ -31,7 +46,7 @@ export const api = {
   /** Tipos de contenido (TRAMITE, SERVICIO, REPORTE, GUIA). */
   tipos: () => pedir('/api/tipos'),
 
-  /** Búsqueda textual en nombre/descripción (el backend ordena A–Z). */
+  /** Búsqueda textual: el backend ordena por relevancia con q, A–Z sin q. */
   buscarTramites: (q = '') => {
     const texto = q.trim();
     return pedir(texto ? `/api/tramites?q=${encodeURIComponent(texto)}` : '/api/tramites');

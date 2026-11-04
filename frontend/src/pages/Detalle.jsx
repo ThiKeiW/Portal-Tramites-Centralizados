@@ -54,12 +54,12 @@ export default function Detalle({ onInicio }) {
   }
 
   const s = sessionStorage.getItem('resultadosURL');
-  const idTipo = tipoId(tramite.tipo?.nombre);
+  const idTipo = tipoId(tramite.tipoNombre);
   // Si el usuario llego desde una busqueda, la migaja de categoria regresa a
   // esa lista exacta (conserva q y filtros); si no, abre la categoria pura.
   const origenUrl = sessionStorage.getItem('resultadosURL');
   const aListado = origenUrl != null ? `/resultados${origenUrl ? '?' + origenUrl : ''}` : `/resultados?tipo=${idTipo}`;
-  const categoria = categoriaDe(tramite.tipo?.nombre);
+  const categoria = categoriaDe(tramite.tipoNombre);
   const requisitos = [...(tramite.requisitos ?? [])].sort((a, b) => a.orden - b.orden);
 
   return (
@@ -76,7 +76,7 @@ export default function Detalle({ onInicio }) {
         <article className="tarjeta detalle">
           <div className="detalle-cab-insignias">
             <span className="insignia insignia-tipo">{TIPO_LABEL[idTipo]}</span>
-            <span className="insignia insignia-ent"><Escudo size={12} /> {tramite.entidad?.nombre} - {tramite.entidad?.siglas}</span>
+            <span className="insignia insignia-ent"><Escudo size={12} /> {tramite.entidadNombre} - {tramite.entidadSiglas}</span>
           </div>
           <h1>{tramite.nombre}</h1>
           <hr />
@@ -119,7 +119,7 @@ export default function Detalle({ onInicio }) {
             {relacionados.map((r) => (
               <button key={r.id} className="relacionado" onClick={() => navigate(`/tramite/${r.id}`)}>
                 <strong>{r.nombre}</strong>
-                <span>{r.entidad?.nombre} - {r.entidad?.siglas}</span>
+                <span>{r.entidadNombre} - {r.entidadSiglas}</span>
               </button>
             ))}
           </section>

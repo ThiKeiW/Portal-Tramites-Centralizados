@@ -3,25 +3,23 @@ package com.portaltramites.service;
 import com.portaltramites.error.RecursoNoEncontradoException;
 import com.portaltramites.error.SolicitudInvalidaException;
 import com.portaltramites.model.Modalidad;
-import com.portaltramites.model.Requisito;
-import com.portaltramites.model.Tramite;
-import com.portaltramites.repository.RequisitoRepository;
-import com.portaltramites.repository.TramiteRepository;
-import jakarta.persistence.criteria.Predicate;
+import com.portaltramites.model.RequisitoVista;
+import com.portaltramites.model.TramiteDetalle;
+import com.portaltramites.model.TramiteLista;
+import com.portaltramites.service.CatalogoService.Snapshot;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 
 @Service
 @RequiredArgsConstructor
@@ -61,8 +59,7 @@ public class TramiteService {
             "pagina", "oficial", "linea", "gob", "gobierno", "peru", "portal",
             "porfa", "porfavor", "dias", "tardes", "disculpa");
 
-    private final TramiteRepository tramiteRepository;
-    private final RequisitoRepository requisitoRepository;
+    private final CatalogoService catalogoService;
 
     /**
      * Búsqueda con filtros opcionales: entidad (siglas), tipo
@@ -74,111 +71,99 @@ public class TramiteService {
      * ("información") valen poco y las selectivas ("financiera") valen mucho.
      * La coincidencia es relajada (basta una palabra) y los resultados van
      * ordenados por puntaje descendente, no alfabéticamente.
+     *
+     * Toda la búsqueda se resuelve en memoria contra el snapshot del
+      * CatalogoService: con BD en la nube esto equivale a CERO consultas SQL
+     * por petición (antes eran unos 550 por el N+1 de las colecciones EAGER).
      */
-    @Transactional(readOnly = true)
-    public List<Tramite> buscar(String q, String entidad, String tipo, String modalidad) {
+    public List<TramiteLista> buscar(String q, String entidad, String tipo, String modalidad) {
         List<String> palabras = (q == null || q.isBlank()) ? List.of() : extraerPalabrasClave(q);
-
-        if (palabras.isEmpty()) {
-            return tramiteRepository.findAll(specFrase(q, entidad, tipo, modalidad),
-                    Sort.by(Sort.Direction.ASC, "nombre"));
-        }
-
         Modalidad modalidadEnum = (modalidad != null && !modalidad.isBlank()) ? parsearModalidad(modalidad) : null;
-        List<Tramite> activos = new ArrayList<>();
-        Map<Integer, Campos> campos = new HashMap<>();
-        for (Tramite t : tramiteRepository.findAll()) {
-            if (Boolean.TRUE.equals(t.getActivo())) {
-                activos.add(t);
-                campos.put(t.getId(), camposDe(t));
+
+        Snapshot snap = catalogoService.snapshot();
+        List<TramiteLista> filas = snap.activos();
+        Map<Integer, List<String>> etiquetasDe = snap.etiquetasPor();
+
+        // Sin palabras clave: filtros directos y orden A–Z (comportamiento
+        // previo; si llega texto puro de muletillas, filtra por la frase
+        // completa en nombre/descripción).
+        if (palabras.isEmpty()) {
+            String patron = (q == null) ? null : normalizar(q.trim());
+            List<TramiteLista> encontrados = new ArrayList<>();
+            for (TramiteLista t : filas) {
+                if (!cumpleFiltros(t, entidad, tipo, modalidadEnum)) {
+                    continue;
+                }
+                if (patron != null && !patron.isBlank()
+                        && !normalizar(t.nombre()).contains(patron)
+                        && !normalizar(t.descripcion() == null ? "" : t.descripcion()).contains(patron)) {
+                    continue;
+                }
+                encontrados.add(t);
             }
+            return encontrados;
         }
 
         // IDF: el peso de cada palabra crece con su rareza en el catálogo.
+        List<Campos> catálogo = new ArrayList<>(filas.size());
+        for (TramiteLista t : filas) {
+            catálogo.add(new Campos(t, etiquetasDe.getOrDefault(t.id(), List.of())));
+        }
         Map<String, Double> idf = new HashMap<>();
         for (String p : palabras) {
             int df = 0;
-            for (Tramite t : activos) {
-                if (pesoDe(campos.get(t.getId()), p) > 0) {
+            for (Campos c : catálogo) {
+                if (pesoDe(c, p) > 0) {
                     df += 1;
                 }
             }
-            idf.put(p, Math.log(1.0 + (activos.size() + 1.0) / (df + 1.0)));
+            idf.put(p, Math.log(1.0 + (catálogo.size() + 1.0) / (df + 1.0)));
         }
 
-        Map<Integer, Double> puntajes = new HashMap<>();
-        List<Tramite> encontrados = new ArrayList<>();
-        for (Tramite t : activos) {
-            if (!cumpleFiltros(t, entidad, tipo, modalidadEnum)) {
+        Map<TramiteLista, Double> puntajes = new HashMap<>();
+        for (Campos c : catálogo) {
+            if (!cumpleFiltros(c.fila(), entidad, tipo, modalidadEnum)) {
                 continue;
             }
-            Campos c = campos.get(t.getId());
             double puntaje = 0;
             for (String p : palabras) {
                 puntaje += pesoDe(c, p) * idf.get(p);
             }
             if (puntaje > 0) {
-                puntajes.put(t.getId(), puntaje);
-                encontrados.add(t);
+                puntajes.put(c.fila(), puntaje);
             }
         }
-        return encontrados.stream()
+        return catálogo.stream()
+                .map(Campos::fila)
+                .filter(puntajes::containsKey)
                 .sorted(Comparator
-                        .comparingDouble((Tramite t) -> puntajes.get(t.getId())).reversed()
-                        .thenComparing(Tramite::getNombre))
+                        .comparingDouble((TramiteLista t) -> puntajes.get(t)).reversed()
+                        .thenComparing(TramiteLista::nombre))
                 .toList();
     }
 
-    /** Filtros + LIKE de frase completa (comportamiento previo, sin palabras clave). */
-    private Specification<Tramite> specFrase(String q, String entidad, String tipo, String modalidad) {
-        return (root, query, cb) -> {
-            List<Predicate> predicados = new ArrayList<>();
-            predicados.add(cb.isTrue(root.get("activo")));
-            if (q != null && !q.isBlank()) {
-                String patron = "%" + q.trim().toLowerCase() + "%";
-                predicados.add(cb.or(
-                        cb.like(cb.lower(root.get("nombre")), patron),
-                        cb.like(cb.lower(root.get("descripcion")), patron)));
-            }
-            if (entidad != null && !entidad.isBlank()) {
-                predicados.add(cb.equal(
-                        cb.lower(root.get("entidad").get("siglas")),
-                        entidad.trim().toLowerCase()));
-            }
-            if (tipo != null && !tipo.isBlank()) {
-                predicados.add(cb.equal(root.get("tipo").get("nombre"), tipo.trim().toUpperCase()));
-            }
-            if (modalidad != null && !modalidad.isBlank()) {
-                predicados.add(cb.equal(root.get("modalidad"), parsearModalidad(modalidad)));
-            }
-            return cb.and(predicados.toArray(new Predicate[0]));
-        };
-    }
-
-    private boolean cumpleFiltros(Tramite t, String entidad, String tipo, Modalidad modalidad) {
+    private boolean cumpleFiltros(TramiteLista t, String entidad, String tipo, Modalidad modalidad) {
         if (entidad != null && !entidad.isBlank()
-                && !t.getEntidad().getSiglas().equalsIgnoreCase(entidad.trim())) {
+                && !t.entidadSiglas().equalsIgnoreCase(entidad.trim())) {
             return false;
         }
         if (tipo != null && !tipo.isBlank()
-                && !t.getTipo().getNombre().equalsIgnoreCase(tipo.trim())) {
+                && !t.tipoNombre().equalsIgnoreCase(tipo.trim())) {
             return false;
         }
-        return modalidad == null || t.getModalidad().equals(modalidad);
+        return modalidad == null || t.modalidad().equals(modalidad);
     }
 
-    /** Campos normalizados del trámite para el matcheo (se calculan una vez). */
-    private record Campos(String nombre, String descripcion, String entidad, String etiquetas) {
-    }
-
-    private Campos camposDe(Tramite t) {
-        StringBuilder etiquetas = new StringBuilder();
-        t.getEtiquetas().forEach(e -> etiquetas.append(normalizar(e.getNombre())).append(' '));
-        return new Campos(
-                normalizar(t.getNombre()),
-                normalizar(t.getDescripcion()),
-                normalizar(t.getEntidad().getSiglas() + " " + t.getEntidad().getNombre()),
-                etiquetas.toString());
+    /** Campos normalizados de una fila para el matcheo (se calculan una vez). */
+    private record Campos(TramiteLista fila, String nombre, String descripcion,
+                          String entidad, String etiquetas) {
+        private Campos(TramiteLista fila, List<String> etiquetas) {
+            this(fila,
+                    normalizar(fila.nombre()),
+                    normalizar(fila.descripcion() == null ? "" : fila.descripcion()),
+                    normalizar(fila.entidadSiglas() + " " + fila.entidadNombre()),
+                    String.join(" ", etiquetas.stream().map(TramiteService::normalizar).toList()) + " ");
+        }
     }
 
     /** Peso base de la coincidencia más fuerte de una palabra (0 si no hay). */
@@ -218,7 +203,7 @@ public class TramiteService {
     }
 
     /** Minúsculas y sin acentos para comparar sin importar tildes. */
-    private String normalizar(String texto) {
+    private static String normalizar(String texto) {
         if (texto == null) {
             return "";
         }
@@ -247,29 +232,65 @@ public class TramiteService {
         return token;
     }
 
-    @Transactional(readOnly = true)
-    public Tramite obtenerPorId(Integer id) {
-        return tramiteRepository.findById(id)
-                .filter(Tramite::getActivo)
+    /** Detalle completo (requisitos incluidos) desde el catálogo en memoria. */
+    public TramiteDetalle detalle(Integer id) {
+        Snapshot snap = catalogoService.snapshot();
+        TramiteLista fila = snap.activos().stream()
+                .filter(t -> t.id().equals(id))
+                .findFirst()
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Trámite no encontrado con id: " + id));
+        List<RequisitoVista> requisitos = snap.requisitosPor()
+                .getOrDefault(id, List.of())
+                .stream()
+                .map(r -> new RequisitoVista(r.idRequisito(), r.orden(), r.descripcion()))
+                .toList();
+        return new TramiteDetalle(
+                fila.id(), fila.nombre(), fila.descripcion(), fila.urlOficial(),
+                fila.modalidad(), fila.costo(), fila.entidadSiglas(), fila.entidadNombre(),
+                fila.tipoNombre(), requisitos);
     }
 
-    @Transactional(readOnly = true)
-    public List<Requisito> requisitos(Integer tramiteId) {
-        obtenerPorId(tramiteId);
-        return requisitoRepository.findByTramiteIdOrderByOrdenAsc(tramiteId);
+    /** Requisitos ligeros de un trámite, desde el catálogo en memoria. */
+    public List<RequisitoVista> requisitos(Integer tramiteId) {
+        return detalle(tramiteId).requisitos();
     }
 
     /**
-     * Documentos/trámites relacionados por etiquetas compartidas,
-     * ordenados por la cantidad de etiquetas en común.
+     * Documentos/trámites relacionados por etiquetas compartidas, ordenados
+     * por la cantidad de etiquetas en común. Se calcula en memoria contra el
+     * catálogo (el mismo conteo que hacía la consulta SQL con GROUP BY, ahora
+     * sin consultas por petición).
      */
-    @Transactional(readOnly = true)
-    public List<Tramite> relacionados(Integer tramiteId, Integer limite) {
-        obtenerPorId(tramiteId);
+    public List<TramiteLista> relacionados(Integer tramiteId, Integer limite) {
+        Snapshot snap = catalogoService.snapshot();
         int efectivo = (limite == null) ? LIMITE_RELACIONADOS_POR_DEFECTO : limite;
-        return tramiteRepository.findRelacionadosPorEtiquetas(tramiteId, efectivo);
+        List<String> base = snap.etiquetasPor().getOrDefault(tramiteId, List.of());
+        if (base.isEmpty()) {
+            return List.of();
+        }
+        Set<String> etiquetasBase = new HashSet<>(base);
+        Map<TramiteLista, Long> compartidas = new HashMap<>();
+        for (TramiteLista t : snap.activos()) {
+            if (t.id().equals(tramiteId)) {
+                continue;
+            }
+            long enComun = snap.etiquetasPor()
+                    .getOrDefault(t.id(), List.of())
+                    .stream()
+                    .filter(etiquetasBase::contains)
+                    .count();
+            if (enComun > 0) {
+                compartidas.put(t, enComun);
+            }
+        }
+        return compartidas.entrySet().stream()
+                .sorted(Comparator
+                        .comparingLong(Map.Entry<TramiteLista, Long>::getValue).reversed()
+                        .thenComparing(e -> e.getKey().nombre()))
+                .limit(efectivo)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     private Modalidad parsearModalidad(String valor) {

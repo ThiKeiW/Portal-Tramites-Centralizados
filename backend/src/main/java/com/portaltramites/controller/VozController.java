@@ -1,6 +1,6 @@
 package com.portaltramites.controller;
 
-import com.portaltramites.model.Tramite;
+import com.portaltramites.model.TramiteLista;
 import com.portaltramites.service.VozService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +33,6 @@ public class VozController {
                 resultado.transcripcion(), resultado.confianza(), resultado.tramites()));
     }
 
-    public record VozRespuesta(String transcripcion, Double confianza, List<Tramite> tramites) {
+    public record VozRespuesta(String transcripcion, Double confianza, List<TramiteLista> tramites) {
     }
 }

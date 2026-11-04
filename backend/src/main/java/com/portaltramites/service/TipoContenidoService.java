@@ -1,10 +1,8 @@
 package com.portaltramites.service;
 
 import com.portaltramites.model.TipoContenido;
-import com.portaltramites.repository.TipoContenidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -12,10 +10,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TipoContenidoService {
 
-    private final TipoContenidoRepository tipoContenidoRepository;
+    private final CatalogoService catalogoService;
 
-    @Transactional(readOnly = true)
+    /** Listado desde el catálogo en memoria (cero consultas al BD). */
     public List<TipoContenido> listar() {
-        return tipoContenidoRepository.findByActivoTrueOrderByNombreAsc();
+        return catalogoService.snapshot().tipos();
     }
 }

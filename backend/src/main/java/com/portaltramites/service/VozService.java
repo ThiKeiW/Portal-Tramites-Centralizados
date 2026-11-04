@@ -6,9 +6,9 @@ import com.portaltramites.error.SolicitudInvalidaException;
 import com.portaltramites.model.Busqueda;
 import com.portaltramites.model.OrigenBusqueda;
 import com.portaltramites.model.Tramite;
+import com.portaltramites.model.TramiteLista;
 import com.portaltramites.repository.BusquedaRepository;
-import com.portaltramites.repository.EntidadRepository;
-import com.portaltramites.repository.EtiquetaRepository;
+import com.portaltramites.repository.TramiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Búsqueda por voz: envía el audio a DeepGram (modelo Nova, español
@@ -40,9 +42,9 @@ public class VozService {
     private static final int MAX_TRAMITES_SUGERIDOS = 5;
 
     private final TramiteService tramiteService;
-    private final EtiquetaRepository etiquetaRepository;
-    private final EntidadRepository entidadRepository;
+    private final TramiteRepository tramiteRepository;
     private final BusquedaRepository busquedaRepository;
+    private final CatalogoService catalogoService;
 
     private final RestClient deepgramClient = RestClient.create("https://api.deepgram.com");
 
@@ -55,7 +57,7 @@ public class VozService {
     @Value("${deepgram.language:es-419}")
     private String language;
 
-    public record VozResultado(String transcripcion, Double confianza, List<Tramite> tramites) {
+    public record VozResultado(String transcripcion, Double confianza, List<TramiteLista> tramites) {
     }
 
     @Transactional
@@ -78,15 +80,18 @@ public class VozService {
             throw new DeepgramException("No se detectó voz en el audio");
         }
 
-        List<Tramite> candidatos = tramiteService.buscar(transcript, null, null, null);
-        List<Tramite> sugeridos = candidatos.stream().limit(MAX_TRAMITES_SUGERIDOS).toList();
-        Tramite primero = sugeridos.isEmpty() ? null : sugeridos.get(0);
+        List<TramiteLista> candidatos = tramiteService.buscar(transcript, null, null, null);
+        List<TramiteLista> sugeridos = candidatos.stream().limit(MAX_TRAMITES_SUGERIDOS).toList();
+        TramiteLista primero = sugeridos.isEmpty() ? null : sugeridos.get(0);
 
         Busqueda registro = new Busqueda();
         registro.setOrigen(OrigenBusqueda.VOZ);
         registro.setTextoTranscrito(transcript);
-        registro.setIntencionDetectada(primero != null ? primero.getNombre() : null);
-        registro.setTramiteRedirect(primero);
+        registro.setIntencionDetectada(primero != null ? primero.nombre() : null);
+        // Proxy sin query: solo se necesita la FK del trámite en busqueda.
+        if (primero != null) {
+            registro.setTramiteRedirect(tramiteRepository.getReferenceById(primero.id()));
+        }
         busquedaRepository.save(registro);
 
         return new VozResultado(transcript, confianza, sugeridos);
@@ -98,9 +103,11 @@ public class VozService {
      * Devuelve la mejor alternativa (transcript + confidence).
      */
     private JsonNode transcribirConDeepgram(byte[] audio, String contentType) {
-        List<String> keyterms = new ArrayList<>();
-        etiquetaRepository.findAll().forEach(e -> keyterms.add(e.getNombre()));
-        entidadRepository.findAll().forEach(e -> keyterms.add(e.getSiglas()));
+        // Keyterms desde el catálogo en memoria (cero consultas al BD).
+        CatalogoService.Snapshot snap = catalogoService.snapshot();
+        Set<String> keyterms = new LinkedHashSet<>();
+        snap.entidades().forEach(e -> keyterms.add(e.getSiglas()));
+        snap.etiquetasPor().values().forEach(nombres -> keyterms.addAll(nombres));
 
         // Diagnostico: si DeepGram responde "corrupt or unsupported data",
         // estos datos dicen que formato real recibio el backend. Magic bytes:

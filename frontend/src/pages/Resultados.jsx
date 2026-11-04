@@ -95,7 +95,7 @@ export default function Resultados({ onVoz, onInicio }) {
   const conteos = useMemo(() => {
     const m = {};
     base.forEach((t) => {
-      const s = t.entidad?.siglas;
+      const s = t.entidadSiglas;
       if (s) m[s] = (m[s] ?? 0) + 1;
     });
     return m;
@@ -104,7 +104,7 @@ export default function Resultados({ onVoz, onInicio }) {
   const conteosTipo = useMemo(() => {
     const m = {};
     base.forEach((t) => {
-      const id = tipoId(t.tipo?.nombre);
+      const id = tipoId(t.tipoNombre);
       m[id] = (m[id] ?? 0) + 1;
     });
     return m;
@@ -130,8 +130,8 @@ export default function Resultados({ onVoz, onInicio }) {
     // Se respeta el orden del backend: con q va por relevancia (puntaje
     // descendente); sin q viene ordenado alfabéticamente.
     return base.filter((t) => {
-      const coincideTipo = tipos.size === 0 || tipos.has(tipoId(t.tipo?.nombre));
-      const coincideEntidad = entidades.size === 0 || entidades.has(t.entidad?.siglas);
+      const coincideTipo = tipos.size === 0 || tipos.has(tipoId(t.tipoNombre));
+      const coincideEntidad = entidades.size === 0 || entidades.has(t.entidadSiglas);
       return coincideTipo && coincideEntidad;
     });
   }, [base, tipos, entidades]);
@@ -246,17 +246,16 @@ export default function Resultados({ onVoz, onInicio }) {
           )}
 
           {estado === 'listo' && resultados.map((t) => {
-            const idTipo = tipoId(t.tipo?.nombre);
+            const idTipo = tipoId(t.tipoNombre);
             return (
               <article key={t.id} className="tarjeta resultado">
-                <span className="resultado-icono"><Doc size={24} /></span>
                 <div className="resultado-cuerpo">
                   <h3>
                     <button className="btn-texto" style={{ fontSize: 'inherit', textAlign: 'left' }} onClick={() => abrirDetalle(t.id)}>
                       {t.nombre}
                     </button>
                     <span className={`insignia insignia-tipo ${idTipo === 'servicio' ? 'servicio' : ''}`}>{TIPO_LABEL[idTipo]}</span>
-                    <span className="insignia insignia-ent">{t.entidad?.siglas}</span>
+                    <span className="insignia insignia-ent">{t.entidadSiglas}</span>
                   </h3>
                   <p>{t.descripcion}</p>
                 </div>

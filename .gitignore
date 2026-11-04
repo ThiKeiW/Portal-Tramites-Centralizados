@@ -2,6 +2,9 @@
 *.docx
 *.doc
 
+# Certificados/truststores de la BD en la nube (backend/cert/)
+backend/cert/
+
 # Entornos: .env es plantilla versionada; las credenciales van en .env.local (ignorado)
 .env.local
 .env.*.local

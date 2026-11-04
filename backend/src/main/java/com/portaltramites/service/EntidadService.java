@@ -13,11 +13,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EntidadService {
 
+    private final CatalogoService catalogoService;
     private final EntidadRepository entidadRepository;
 
-    @Transactional(readOnly = true)
+    /** Listado desde el catálogo en memoria (cero consultas al BD). */
     public List<Entidad> listar() {
-        return entidadRepository.findByActivoTrueOrderByNombreAsc();
+        return catalogoService.snapshot().entidades();
     }
 
     @Transactional(readOnly = true)
