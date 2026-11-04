@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { CONTRASTES, CURSORES, TAMANOS_TEXTO, labelDe, useAccessibility } from '../context/AccessibilityContext';
 import { Acceso, CursorFlecha, TextoAa, X } from './iconos';
 
@@ -32,6 +33,16 @@ function Grupo({ titulo, icono, valor, opciones, segmentos, activoClase, onElegi
 
 export default function PanelAccesibilidad({ onCerrar }) {
   const { contraste, tamanoTexto, cursor, set, restablecer } = useAccessibility();
+  const refCerrar = useRef(null);
+
+  // Al abrir el panel (clic o Shift) el foco entra al dialogo, y Escape lo
+  // cierra sin salir del teclado.
+  useEffect(() => {
+    refCerrar.current?.focus();
+    const key = (e) => { if (e.key === 'Escape') onCerrar(); };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [onCerrar]);
 
   return (
     <div className="velo" style={{ placeItems: 'stretch', justifyItems: 'end', padding: 0 }} onClick={onCerrar}>
@@ -42,7 +53,7 @@ export default function PanelAccesibilidad({ onCerrar }) {
         <div className="cajon-cab">
           <Acceso size={22} />
           <h2>Menú de Accesibilidad</h2>
-          <button className="btn-cerrar" onClick={onCerrar} aria-label="Cerrar menú de accesibilidad">
+          <button ref={refCerrar} className="btn-cerrar" onClick={onCerrar} aria-label="Cerrar menú de accesibilidad">
             <X size={18} />
           </button>
         </div>

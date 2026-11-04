@@ -140,6 +140,20 @@ export default function Resultados({ onVoz, onInicio }) {
 
   const abrirDetalle = (id) => navigate(`/tramite/${id}`);
 
+  // Navegacion con flechas ↑/↓: recorren en bucle los controles del contenedor
+  // activo (Enter/espacio activan el elemento igual que de costumbre).
+  const moverFlecha = (selector) => (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const opciones = [...e.currentTarget.querySelectorAll(selector)];
+    if (opciones.length === 0) return;
+    e.preventDefault();
+    const i = opciones.indexOf(document.activeElement);
+    const siguiente = e.key === 'ArrowDown'
+      ? (i + 1) % opciones.length
+      : (i <= 0 ? opciones.length - 1 : i - 1);
+    opciones[i === -1 ? 0 : siguiente].focus();
+  };
+
   return (
     <>
       <div className="subbarra">
@@ -167,7 +181,7 @@ export default function Resultados({ onVoz, onInicio }) {
       </div>
 
       <div className="layout-resultados">
-        <aside className="filtros" aria-label="Filtros">
+        <aside className="filtros" aria-label="Filtros" onKeyDown={moverFlecha('input[type="checkbox"]')}>
           <div className="filtros-cab">
             <h2>Filtrar resultados</h2>
             <button className="btn-limpiar-todo" onClick={limpiarFiltros}>Limpiar todo</button>
@@ -210,7 +224,7 @@ export default function Resultados({ onVoz, onInicio }) {
           </div>
         </aside>
 
-        <section aria-live="polite">
+        <section aria-live="polite" onKeyDown={moverFlecha('.resultado .btn-texto')}>
           <div className="resultados-cab">
             <p>Se encontraron <strong>{resultados.length} resultado{resultados.length === 1 ? '' : 's'}</strong>
               {query && <> para “{query}”</>}

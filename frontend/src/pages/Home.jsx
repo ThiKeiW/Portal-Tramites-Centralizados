@@ -43,6 +43,19 @@ export default function Home({ onVoz }) {
     irResultados({ q: texto.trim() });
   };
 
+  // Flechas ↑/↓: recorren en bucle las tarjetas clicables de una grilla.
+  const moverFlecha = (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const tarjetas = [...e.currentTarget.querySelectorAll('.tarjeta.clicable')];
+    if (tarjetas.length === 0) return;
+    e.preventDefault();
+    const i = tarjetas.indexOf(document.activeElement);
+    const siguiente = e.key === 'ArrowDown'
+      ? (i + 1) % tarjetas.length
+      : (i <= 0 ? tarjetas.length - 1 : i - 1);
+    tarjetas[i === -1 ? 0 : siguiente].focus();
+  };
+
   const destacadas = ENTIDADES_DESTACADAS.map((siglas) =>
     entidades.find((e) => e.siglas === siglas),
   ).filter(Boolean);
@@ -84,7 +97,7 @@ export default function Home({ onVoz }) {
             </div>
           )}
           {estado === 'listo' && (
-            <div className="grid-4">
+            <div className="grid-4" onKeyDown={moverFlecha}>
               {tipos.map((t) => {
                 const meta = categoriaDe(t.nombre);
                 const Icono = ICONOS_CATEGORIA[meta.icono] ?? Doc;
@@ -106,7 +119,7 @@ export default function Home({ onVoz }) {
             <div className="cargando" role="status"><span className="rueda" aria-hidden="true" /><span>Cargando entidades…</span></div>
           )}
           {estado === 'listo' && (
-            <div className="grid-4">
+            <div className="grid-4" onKeyDown={moverFlecha}>
               {destacadas.map((e) => (
                 <button key={e.siglas} className="tarjeta clicable" onClick={() => irResultados({ entidad: e.siglas })}>
                   <span className="entidad-cab">

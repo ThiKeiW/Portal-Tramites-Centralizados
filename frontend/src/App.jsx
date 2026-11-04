@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import Navbar from './components/Navbar';
@@ -34,6 +34,29 @@ export default function App() {
   const { pathname } = useLocation();
   const [vozAbierta, setVozAbierta] = useState(false);
   const [a11yAbierto, setA11yAbierto] = useState(false);
+
+  // Panel de accesibilidad: Shift solado (sin combinar con otra tecla) lo
+  // abre o cierra. Shift+Tab no lo activa porque al soltarse no hubo otra
+  // tecla en medio (shiftSolo se anula en cualquier keydown distinto de Shift).
+  const shiftSolo = useRef(false);
+  useEffect(() => {
+    const bajar = (e) => {
+      if (e.key === 'Shift') shiftSolo.current = true;
+      else shiftSolo.current = false;
+    };
+    const soltar = (e) => {
+      if (e.key === 'Shift' && shiftSolo.current) {
+        shiftSolo.current = false;
+        setA11yAbierto((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', bajar);
+    window.addEventListener('keyup', soltar);
+    return () => {
+      window.removeEventListener('keydown', bajar);
+      window.removeEventListener('keyup', soltar);
+    };
+  }, []);
 
   // Volver arriba al cambiar de ruta (antes: useEffect sobre `vista`).
   useEffect(() => {
