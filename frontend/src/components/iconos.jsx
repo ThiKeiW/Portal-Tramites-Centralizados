@@ -43,6 +43,9 @@ export const Acceso = (p) => (
 export const ChevronDer = (p) => (
   <Icono {...p} d={<path d="m9 6 6 6-6 6" />} />
 );
+export const ChevronIzq = (p) => (
+  <Icono {...p} d={<path d="m15 6-6 6 6 6" />} />
+);
 export const Escudo = (p) => (
   <Icono {...p} d={<><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" /></>} />
 );

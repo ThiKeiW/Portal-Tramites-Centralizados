@@ -2,7 +2,7 @@
 // La URL se puede sobreescribir con la variable VITE_API_URL (archivo .env).
 // El backend solo acepta peticiones CORS desde http://localhost:5173.
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:18080';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 // Cache de respuestas estables (catálogos): un solo fetch por recurso, se
 // comparte entre Home y Resultados y sobrevive a la navegación dentro de la

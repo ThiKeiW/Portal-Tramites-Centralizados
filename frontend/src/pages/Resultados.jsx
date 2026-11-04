@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/portalApi';
 import { TIPO_LABEL, categoriaDe, tipoId } from '../data/catalogo';
-import { Casa, ChevronDer, Doc, Lupa, Mic, X } from '../components/iconos';
+import { Casa, ChevronDer, ChevronIzq, Doc, Lupa, Mic, X } from '../components/iconos';
+
+// El listado se pagina en bloques de 15; la pagina activa viaja en la URL
+// (?page=N) para que el navegador (atrás) y la migaja del detalle regresar
+// al mismo bloque donde estaba el último recurso abierto.
+const POR_PAGINA = 15;
 
 // La pagina se deriva de la URL (/resultados?q=&tipo=&entidad=): los filtros
 // y la busqueda se sincronizan con searchParams (antes venian del estado App).
@@ -136,9 +141,65 @@ export default function Resultados({ onVoz, onInicio }) {
     });
   }, [base, tipos, entidades]);
 
-  const entidadesVisibles = catalogoEntidades.filter((e) => (conteos[e.siglas] ?? 0) > 0);
+  // Paginación: la página activa vive en la URL (?page=N); al cambiar
+  // filtros o buscar, los params se reescriben sin page y se vuelve a la
+  // primera página. Si la URL pide una página fuera de rango, se ajusta.
+  const totalPaginas = Math.max(1, Math.ceil(resultados.length / POR_PAGINA));
+  const paginaURL = (() => {
+    const n = parseInt(searchParams.get('page'), 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  })();
+  const paginaActual = Math.min(paginaURL, totalPaginas);
+  const visibles = resultados.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA);
 
-  const abrirDetalle = (id) => navigate(`/tramite/${id}`);
+  // Bloques de paginacion (1 ... alrededores de la pagina actual ... N) con "..."
+  // cuando hay saltos, como en los buscadores clásicos.
+  const bloquesPagina = useMemo(() => {
+    if (totalPaginas <= 5) {
+      return Array.from({ length: totalPaginas }, (_, i) => ({ tipo: 'pagina', n: i + 1 }));
+    }
+    const c = paginaActual;
+    const boletos = new Set([1, totalPaginas, c - 1, c, c + 1].filter((n) => n >= 1 && n <= totalPaginas));
+    const orden = [...boletos].sort((a, b) => a - b);
+    const partes = [];
+    let prevN = 0;
+    for (const n of orden) {
+      if (n - prevN > 1) partes.push({ tipo: 'puntos' });
+      partes.push({ tipo: 'pagina', n });
+      prevN = n;
+    }
+    return partes;
+  }, [paginaActual, totalPaginas]);
+
+  const irPagina = (n) => {
+    setSearchParams((p) => {
+      const q2 = new URLSearchParams(p);
+      if (n > 1) q2.set('page', String(n));
+      else q2.delete('page');
+      return q2;
+    });
+    window.scrollTo(0, 0);
+  };
+
+  // Abre el detalle recordando el recurso: al regresar (atrás del navegador o
+  // migaja del detalle) se recarga el listado con la misma página (URL) y se
+  // hace scroll hasta ese recurso.
+  const abrirDetalle = (id) => {
+    sessionStorage.setItem('resultadosUltimoId', String(id));
+    navigate(`/tramite/${id}`);
+  };
+
+  // Al volver del detalle: centra el último recurso abierto en la pantalla.
+  useEffect(() => {
+    if (estado !== 'listo') return;
+    const ultimo = sessionStorage.getItem('resultadosUltimoId');
+    if (!ultimo) return;
+    sessionStorage.removeItem('resultadosUltimoId');
+    const el = document.querySelector(`[data-res-id="${ultimo}"]`);
+    if (el) el.scrollIntoView({ block: 'center' });
+  }, [estado, paginaActual]);
+
+  const entidadesVisibles = catalogoEntidades.filter((e) => (conteos[e.siglas] ?? 0) > 0);
 
   // Navegacion con flechas ↑/↓: recorren en bucle los controles del contenedor
   // activo (Enter/espacio activan el elemento igual que de costumbre).
@@ -245,10 +306,10 @@ export default function Resultados({ onVoz, onInicio }) {
             </div>
           )}
 
-          {estado === 'listo' && resultados.map((t) => {
+          {estado === 'listo' && visibles.map((t) => {
             const idTipo = tipoId(t.tipoNombre);
             return (
-              <article key={t.id} className="tarjeta resultado">
+              <article key={t.id} className="tarjeta resultado" data-res-id={t.id}>
                 <div className="resultado-cuerpo">
                   <h3>
                     <button className="btn-texto" style={{ fontSize: 'inherit', textAlign: 'left' }} onClick={() => abrirDetalle(t.id)}>
@@ -265,6 +326,40 @@ export default function Resultados({ onVoz, onInicio }) {
               </article>
             );
           })}
+
+          {estado === 'listo' && totalPaginas > 1 && (
+            <nav className="paginacion" aria-label="Paginacion de resultados">
+              <button
+                onClick={() => irPagina(paginaActual - 1)}
+                disabled={paginaActual === 1}
+                aria-label="Pagina anterior"
+              >
+                <ChevronIzq size={18} />
+              </button>
+              {bloquesPagina.map((b, i) =>
+                b.tipo === 'pagina' ? (
+                  <button
+                    key={i}
+                    className={b.n === paginaActual ? 'activo' : ''}
+                    onClick={() => irPagina(b.n)}
+                    aria-current={b.n === paginaActual ? 'page' : undefined}
+                    aria-label={`Pagina ${b.n}`}
+                  >
+                    {b.n}
+                  </button>
+                ) : (
+                  <span key={i} className="paginacion-puntos" aria-hidden="true">…</span>
+                ),
+              )}
+              <button
+                onClick={() => irPagina(paginaActual + 1)}
+                disabled={paginaActual === totalPaginas}
+                aria-label="Pagina siguiente"
+              >
+                <ChevronDer size={18} />
+              </button>
+            </nav>
+          )}
 
           {estado === 'listo' && resultados.length === 0 && (
             <div className="tarjeta estado-vacio">
