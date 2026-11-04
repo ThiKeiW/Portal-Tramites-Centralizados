@@ -53,7 +53,12 @@ export default function Detalle({ onInicio }) {
     );
   }
 
+  const s = sessionStorage.getItem('resultadosURL');
   const idTipo = tipoId(tramite.tipo?.nombre);
+  // Si el usuario llego desde una busqueda, la migaja de categoria regresa a
+  // esa lista exacta (conserva q y filtros); si no, abre la categoria pura.
+  const origenUrl = sessionStorage.getItem('resultadosURL');
+  const aListado = origenUrl != null ? `/resultados${origenUrl ? '?' + origenUrl : ''}` : `/resultados?tipo=${idTipo}`;
   const categoria = categoriaDe(tramite.tipo?.nombre);
   const requisitos = [...(tramite.requisitos ?? [])].sort((a, b) => a.orden - b.orden);
 
@@ -62,7 +67,7 @@ export default function Detalle({ onInicio }) {
       <nav className="migas" aria-label="Migas de pan">
         <Link to="/" className="btn-volver btn-volver-compacto"><Casa size={16} /> Inicio</Link>
         <ChevronDer size={14} />
-        <Link to={`/resultados?tipo=${idTipo}`}>{categoria.nombre}</Link>
+        <Link to={aListado}>{categoria.nombre}</Link>
         <ChevronDer size={14} />
         <strong aria-current="page">{tramite.nombre}</strong>
       </nav>

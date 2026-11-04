@@ -40,6 +40,12 @@ export default function Resultados({ onVoz, onInicio }) {
     setTexto(query);
   }, [query]);
 
+  // Publica la URL actual (con filtros) para que el detalle pueda regresar
+  // al listado tal como estaba (la lee "Volver" / migajas de Detalle).
+  useEffect(() => {
+    sessionStorage.setItem('resultadosURL', searchParams.toString());
+  }, [searchParams]);
+
   useEffect(() => {
     let vivo = true;
     setEstado('cargando');
