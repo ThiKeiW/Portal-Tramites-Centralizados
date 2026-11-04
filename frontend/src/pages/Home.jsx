@@ -128,7 +128,6 @@ export default function Home({ onVoz }) {
                     </span>
                     <span>
                       <strong>{e.siglas}</strong>
-                      <span>{e.sector}</span>
                     </span>
                   </span>
                 </button>
