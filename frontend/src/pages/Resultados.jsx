@@ -65,7 +65,9 @@ export default function Resultados({ onVoz, onInicio }) {
     if (query) params.set('q', query);
     if (nuevosTipos.size > 0) params.set('tipo', [...nuevosTipos].join(','));
     if (nuevasEntidades.size > 0) params.set('entidad', [...nuevasEntidades].join(','));
-    setSearchParams(params, { replace: true });
+    // Sin replace: cada ajuste de filtro crea su entrada en el historial para
+    // que, al volver del detalle, la URL (y los filtros) se mantengan.
+    setSearchParams(params);
   };
 
   const alternarEntidad = (sigla) => {
