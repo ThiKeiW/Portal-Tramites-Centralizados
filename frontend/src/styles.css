@@ -462,4 +462,19 @@ html[data-contraste='alto'] .segmento { border-color: #000; }
   .hero h1 { font-size: 1.5rem; }
   .ficha-doble { grid-template-columns: 1fr; }
   .resultado { flex-direction: column; }
+
+  /* Búsqueda (hero): el botón pasa a una segunda línea a todo lo ancho.
+     Así no desborda del marco en móviles ni al agrandar el texto desde
+     el panel de accesibilidad (todo escala en rem). */
+  .hero { padding: 3rem 1rem 2.5rem; }
+  .barra-busqueda { flex-wrap: wrap; padding: 0.5rem; }
+  .barra-busqueda input { flex: 1 1 10rem; height: 2.75rem; }
+  .barra-busqueda .btn-primario { flex: 1 1 100%; }
+  .busquedas-populares { margin-top: 1.25rem; }
+
+  /* Búsqueda (resultados): la caja ocupa todo el ancho y mic + botón
+     comparten la línea siguiente, sin riesgo de desborde. */
+  .subbarra-inner { flex-wrap: wrap; padding: 0.75rem 1rem; }
+  .caja-busqueda { flex: 1 1 100%; max-width: none; }
+  .btn-buscar-texto { flex: 1; text-align: center; }
 }
